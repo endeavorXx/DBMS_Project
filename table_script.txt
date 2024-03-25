@@ -17,7 +17,7 @@ create table customer(
     customer_id integer not null,
     first_name varchar(50) not null,
     last_name varchar(50) not null,
-    phone_no varchar(20) not null ,
+    phone_no varchar(20) unique not null ,
     street varchar(50) not null,
     city varchar(50) not null,
     state varchar(50) not null,
@@ -32,7 +32,7 @@ create table employee(
     designation varchar(50) not null,
     start_date varchar(20) not null,
     salary integer not null,
-    phone_no varchar(20) not null,
+    phone_no varchar(20) unique not null,
     password varchar(20) not null,
     primary key (employee_id)
 );
@@ -43,7 +43,7 @@ create table vendor(
     street varchar(100) not null,
     city varchar(50) not null,
     state varchar(50) not null,
-    phone_no varchar(20) not null,
+    phone_no varchar(20) unique not null,
     primary key (vendor_id)
 );
 
