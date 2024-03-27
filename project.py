@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QScrollArea
 from PyQt5.uic import loadUi
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 
 class SignupWindow(QMainWindow):
     def __init__(self):
@@ -20,8 +21,20 @@ class SignupWindow(QMainWindow):
 
         # Upload details to the database
         print(firstname)
+        
+        # if (firstname == "" or lastname == "" or phone_no == "" or street == "" or city == "" or state == "" or password == ""):
+        #     self.enterButton.clicked.connect(self.show_popup)
+        # else:
         self.close()
         login_window.show()
+
+    def show_popup(self):
+        msg = QMessageBox()
+        msg.setWindowTitle("Warning!!")
+        msg.setText("Wrong credentials")
+
+        #to show the message box
+        x = msg.exec_()
 
 
 class LoginWindow(QMainWindow):
@@ -39,7 +52,7 @@ class LoginWindow(QMainWindow):
         if username == 'admin' and password == 'admin123':
             print("Login successful")
             self.close()
-            home_window.show()
+            MainWindow.show()
 
             # You can add further actions here such as opening a new window
         else:
@@ -50,44 +63,84 @@ class LoginWindow(QMainWindow):
         signup_window.show()
 
 class HomePage(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        loadUi('home.ui', self)  # Load the UI from the converted Python file
 
-        # self.setWindowTitle("Scrollable Page")
-        # self.setGeometry(100, 100, 800, 600)
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(814, 800)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
+        self.scrollArea.setMouseTracking(True)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, -175, 1222, 1222))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
 
-        # # Create a scroll area
-        # scroll_area = QScrollArea()
-        # scroll_area.setWidgetResizable(True)
+        # Add multiple items using a for loop
+        items = [("A2Milk-min.jpg", "MILK"), ("eggs.jpeg", "EGGS"), ("butter.jpg", "BUTTER"), ("download.jpg", "BREAD"), ("macaroni.jpg", "PASTA"), ("brown rice.jpg", "BROWN RICE"), ("olive_oil.jpg", "OLIVE OIL")]
+        
+        for item_image, item_name in items:
+            frame = QtWidgets.QFrame(self.scrollAreaWidgetContents)
+            frame.setMinimumSize(QtCore.QSize(200, 200))
+            frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+            frame.setFrameShadow(QtWidgets.QFrame.Raised)
+            frame.setObjectName("frame")
 
-        # # Create a main widget for the scroll area
-        # scroll_widget = QWidget()
-        # scroll_area.setWidget(scroll_widget)
+            # Add item photo
+            item_photo = QtWidgets.QLabel(frame)
+            item_photo.setGeometry(QtCore.QRect(50, 40, 111, 121))
+            item_photo.setText("")
+            item_photo.setPixmap(QtGui.QPixmap(item_image))
+            item_photo.setScaledContents(True)
+            item_photo.setObjectName(f"{item_name.lower()}_photo")
 
-        # # Create a vertical layout for the main widget
-        # layout = QVBoxLayout(scroll_widget)
-        # scroll_widget.setLayout(layout)
+            # Add item label
+            item_label = QtWidgets.QLabel(frame)
+            item_label.setGeometry(QtCore.QRect(220, 50, 131, 41))
+            item_label.setObjectName(f"{item_name.lower()}_label")
+            item_label.setText(item_name)
 
-        # label = QLabel("")
-        # label.setGeometry(QtCore.QRect(80, 70, 111, 121))
-        # label.setText("")
-        # label.setPixmap(QtGui.QPixmap("A2Milk-min.jpg"))
-        # label.setScaledContents(True)
-        # layout.addWidget(label)
+            # Add item button
+            item_button = QtWidgets.QPushButton(frame)
+            item_button.setGeometry(QtCore.QRect(220, 110, 93, 28))
+            item_button.setObjectName(f"{item_name.lower()}_button")
+            item_button.setText("BUY NOW")
 
-        # # Add content to the layout
-        # for i in range(50):
-        #     label = QLabel(f"Label {i}")
-        #     layout.addWidget(label)
+            self.verticalLayout_2.addWidget(frame)
 
-        # # Set the central widget as the scroll area
-        # self.setCentralWidget(scroll_area)
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.verticalLayout.addWidget(self.scrollArea)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 814, 26))
+        self.menubar.setObjectName("menubar")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    
     login_window = LoginWindow()
     signup_window = SignupWindow()
+
+    MainWindow = QtWidgets.QMainWindow()
     home_window = HomePage()
+    home_window.setupUi(MainWindow)
+
     login_window.show()
     sys.exit(app.exec_())
