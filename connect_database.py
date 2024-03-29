@@ -21,6 +21,24 @@ class connectDatabase:
         self.cursor = self.con.cursor(dictionary = True)
         self.cursor.execute("use megamarket;")
 
+    def get_customer_authentication(self, phone_no, password):
+        self.connect_db()
+        condition = f"phone_no = '{phone_no}' and password = '{password}'"
+        sql = f"""
+                select customer_id,first_name,last_name,phone_no,street,city,state,pin_code from customer where {condition};
+            """ 
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        except Exception as E:
+
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+
     def add_customer_info(self, first_name, last_name, phone_no, street, city, state, pswd):
         self.connect_db()
 
@@ -54,7 +72,25 @@ class connectDatabase:
             return E
         finally:
             self.con.close()
-     
+
+    def search_order_info(self,transaction_id):
+        self.connect_db()
+
+        sql = f"""
+            SELECT * FROM orders where transaction_id = '{transaction_id}'
+        """ 
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        except Exception as E:
+
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+
     def add_order_details_info(self, order_id, product_id, qty, cost_per_piece, total):
         self.connect_db()
 
@@ -93,7 +129,7 @@ class connectDatabase:
         self.connect_db()
 
         sql = f"""
-            SELECT * FROM PRODUCT;
+            SELECT * FROM PRODUCT
         """ 
         try:
             self.cursor.execute(sql)
@@ -105,6 +141,42 @@ class connectDatabase:
             self.con.rollback()
             return E
         finally:
+            self.con.close()
+    
+    def add_order(self,customer_id,payment_method, amount, transaction_id, order_date, order_time, delivery_date,delivery_status = "Pending"):
+        self.connect_db()
+
+        sql = f"""
+            INSERT INTO orders (customer_id, payment_method, amount, transaction_id, order_date, order_time, delivery_date, delivery_status)
+VALUES({customer_id},'{payment_method}',{amount},'{transaction_id}','{order_date}','{order_time}','{delivery_date}','{delivery_status}');
+        """ 
+        try:
+            self.cursor.execute(sql)
+            self.con.commit()
+        except Exception as E:
+            print("Query not executed")
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+    
+    def search_product_info(self, product_id):
+        self.connect_db()
+        self.cursor = self.con.cursor(dictionary = False)
+        sql = f"""
+            SELECT name,price,url FROM PRODUCT where product_id = {product_id}
+        """
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        except Exception as E:
+
+            self.con.rollback()
+            return E
+        finally:
+            self.cursor = self.con.cursor(dictionary = True)
             self.con.close()
 
     def get_all_customers(self):

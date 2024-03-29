@@ -5,6 +5,6 @@ mycon = sql.connect(host="localhost",user="root",password="123456",auth_plugin =
 cursor = mycon.cursor()
 
 cursor.execute("use megamarket")
-cursor.execute("select* from customer")
+cursor.execute("select* from product")
 data = cursor.fetchall()
 print(data)
