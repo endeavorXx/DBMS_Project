@@ -4,6 +4,7 @@ from PyQt5.uic import loadUi
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon, QIntValidator
+from PyQt5.QtMultimedia import QSound
 from admin_login import Ui_MainWindow
 from connect_database import connectDatabase
 import hashlib
@@ -411,6 +412,8 @@ class Ui_ItemDetailsWindow(object):
 
 class Invoice_MainWindow(object):
     def __init__(self, comboText, myCustomer, product_id, quantity, price, total):
+        self.notification_sound = QSound("notification.wav")
+        self.notification_sound.play()
         self.db = connectDatabase()
         self.comboText = comboText
         self.product_id = product_id
@@ -444,6 +447,8 @@ class Invoice_MainWindow(object):
         print(self.quantity)
         for i in range(len(self.product_id)):
             self.db.add_order_details_info(self.order_id, self.product_id[i], self.quantity[i], self.price[i], self.price[i]*self.quantity[i])
+
+        self.db.clearCart(self.myCustomer["customer_id"])
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -621,7 +626,7 @@ class PopupDialog(QDialog):
         # Add icon
         self.icon_label = QLabel()
         self.icon_label.setAlignment(Qt.AlignCenter)  # Align icon in the center
-        pixmap = QPixmap('check_icon3.jpg').scaledToHeight(225)  # Scale pixmap to desired height
+        pixmap = QPixmap(icon_path).scaledToHeight(225)  # Scale pixmap to desired height
         self.icon_label.setPixmap(pixmap)
         layout.addWidget(self.icon_label)
         
@@ -636,9 +641,13 @@ class PopupDialog(QDialog):
         
         # Set background color to green
         self.setStyleSheet("background-color: white;")
+
+        ## Create a beep - sound after clicking desired Button
+        self.notification_sound = QSound("notification.wav")
+        self.notification_sound.play()
         
         # Close the dialog after 2 seconds
-        QTimer.singleShot(700, self.close)
+        QTimer.singleShot(1000, self.close)
 
 
 class CartPage(QtWidgets.QMainWindow):
@@ -772,7 +781,7 @@ class CartPage(QtWidgets.QMainWindow):
         self.label_5.setStyleSheet("font-weight: bold; font-size: 12px;")
 
         self.widget1 = QtWidgets.QWidget(frame)
-        self.widget1.setGeometry(QtCore.QRect(460, 100, 231, 131))
+        self.widget1.setGeometry(QtCore.QRect(460, 100, 300, 131))
         self.widget1.setObjectName("widget1")
 
         self.gridLayout_2 = QtWidgets.QGridLayout(self.widget1)
@@ -843,12 +852,20 @@ class CartPage(QtWidgets.QMainWindow):
 
     def order_product(self, MainWindow, comboText, customer_details, p_id, qty, price, total):
         MainWindow.close()
-        self.invoice_details_window = QtWidgets.QMainWindow()
-        self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
-        self.ui.setupUi(self.invoice_details_window)
+        if p_id:
+            self.invoice_details_window = QtWidgets.QMainWindow()
+            self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
+            self.ui.setupUi(self.invoice_details_window)
 
-        # self.ui.label.setText(f"Item Details for {item_name}")
-        self.invoice_details_window.show()
+            # self.ui.label.setText(f"Item Details for {item_name}")
+            self.invoice_details_window.show()
+        else:
+            ## show pop-up no item Added to cart
+            self.show_notification()
+
+    def show_notification(self):
+        dialog = PopupDialog("Cart is Empty !!", 'red_cross.jpg', self)
+        dialog.exec_()
     
     def update_quantity_in_db(self):
         index = 0
@@ -1039,7 +1056,7 @@ class HomePage(QtWidgets.QMainWindow):
         self.show_notification()
     
     def show_notification(self):
-        dialog = PopupDialog("Item added to cart", self)
+        dialog = PopupDialog("Item added to cart", 'check_icon3.jpg', self)
         dialog.exec_()
     
     def retranslateUi(self, MainWindow):
@@ -1048,6 +1065,7 @@ class HomePage(QtWidgets.QMainWindow):
     
     def show_item_details(self, pd_id):
         self.close()
+        
         self.item_details_window = QtWidgets.QMainWindow()
         self.ui = Ui_ItemDetailsWindow(pd_id, self.myCustomer)
         self.ui.setupUi(self.item_details_window)

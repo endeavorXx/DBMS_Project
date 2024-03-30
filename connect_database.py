@@ -177,6 +177,23 @@ VALUES({customer_id},'{payment_method}',{amount},'{transaction_id}','{order_date
         finally:
             self.con.close()
 
+    def clearCart(self, customer_id):
+        self.connect_db()
+
+        sql = f"""
+            DELETE FROM cart where customer_id = {customer_id};
+        """ 
+
+        try:
+            self.cursor.execute(sql)
+            self.con.commit()
+        except Exception as E:
+
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+    
     def update_cart(self, customer_id,product_id,new_quantity, new_total):
         self.connect_db()
 
