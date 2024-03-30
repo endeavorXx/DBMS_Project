@@ -92,7 +92,7 @@ class LoginWindow(QMainWindow):
             self.update_btn = self.adminui.updateButton
             self.select_btn = self.adminui.selectButton
             self.search_btn = self.adminui.searchButton
-            self.delete_btn = self.adminui.deleteButton
+            self.clear_btn = self.adminui.clearButton
 
             self.result_table = self.adminui.tableWidget
             self.result_table.setSortingEnabled(False)
@@ -127,13 +127,11 @@ class LoginWindow(QMainWindow):
             
     def init_signal_slot(self):
         # Connect button to their respective functions
-        self.add_btn.clicked.connect(self.add_info)
-        self.delete_btn.clicked.connect(self.delete_info)
+        self.add_btn.clicked.connect(self.add_new_customer_info)
         self.search_btn.clicked.connect(self.search_info)
         self.update_btn.clicked.connect(self.update_info)        
-        self.select_btn.clicked.connect(self.select_info)              
-
-
+        self.select_btn.clicked.connect(self.select_info)  
+        self.clear_btn.clicked.connect(self.clear_form_info)            
 
 
     ## For ADMIN ANALYSIS OF CUSTOMERS
@@ -158,6 +156,36 @@ class LoginWindow(QMainWindow):
 
         print(customer_result)
         self.show_data(customer_result)
+    
+    def get_customer_info(self):
+        #Function to retrive data from the form
+        customer_id = self.customer_id.text().strip()
+        first_name = self.first_name.text().strip()
+        last_name = self.last_name.text().strip()
+        phone_no = self.phone_no.text().strip()
+        street = self.street.text().strip()
+        city = self.city.text().strip()
+        state = self.state.text().strip()
+        pin_code = self.pin_code.text().strip()
+
+        if pin_code.isdigit():
+            pin_code = int(pin_code)
+        else:
+            print("Not all digits in pin code")
+
+        ## add pincode information later when table in database is changed with extra column for pin code
+        customer_info = {
+            "customer_id": customer_id,
+            "first_name": first_name,
+            "last_name" : last_name,
+            "phone_no" : phone_no,
+            "street" : street,
+            "city" : city,
+            "state" : state,
+            "pin_code" : pin_code
+        } 
+        print(customer_info)
+        return customer_info
     
     def show_data(self, result):
         # Function to populate the table with student information
@@ -184,19 +212,98 @@ class LoginWindow(QMainWindow):
             self.result_table.setRowCount(0)
             return 
 
-    def add_info(self):
+    def add_new_customer_info(self):
         # self.disable_buttons()
         customer_info = self.get_customer_info()
+        self.customer_id.setEnabled(False)
 
+        print(customer_info)
+        if customer_info["customer_id"]:
+            QMessageBox.information(self, "Alert", f"Customer Id is automatically generated", QMessageBox.StandardButton.Ok)
+        if customer_info["first_name"] == "" or customer_info["last_name"] == "" or customer_info["phone_no"] == "" or customer_info["street"] == "" or customer_info["city"]=="" or customer_info["state"]=="" or customer_info["pin_code"]=="":
+             ## Alert that some input fields are missing
+            QMessageBox.information(self, "Missing Information", f"Please fill all fields", QMessageBox.StandardButton.Ok)
+        else:
+            add_result = self.db.add_customer_info(
+                first_name = customer_info["first_name"],
+                last_name = customer_info["last_name"],
+                phone_no = customer_info["phone_no"],
+                street = customer_info["street"],
+                city = customer_info["city"],
+                state = customer_info["state"],
+                pin_code = customer_info["pin_code"],
+                pswd = "0000"                               ## Default password while adding a customer is "0000"
+            )
 
-    def delete_info(self):
-        pass
+        self.enable_buttons()
+        self.customer_id.setEnabled(False)
+        self.search_info()
 
     def update_info(self):
-        pass
+        new_customer_info = self.get_customer_info()
+        # print(new_customer_info)
+
+        if new_customer_info["customer_id"]:
+            update_result = self.db.update_customer_info(
+                customer_id= new_customer_info["customer_id"],
+                first_name = new_customer_info["first_name"],
+                last_name = new_customer_info["last_name"],
+                phone_no = new_customer_info["phone_no"],
+                street = new_customer_info["street"],
+                city = new_customer_info["city"],
+                state = new_customer_info["state"],
+                pin_code = new_customer_info["pin_code"]
+            )
+
+            if update_result:
+                QMessageBox.information(self, "Warning", f"Failed to update information: {update_result}, please try again", QMessageBox.StandardButton.Ok)
+            else:
+                self.search_info()
+        else:
+            QMessageBox.information(self, "Warning", "Please select one student information to update")
 
     def select_info(self):
-        pass
+        
+        select_row = self.result_table.currentRow()
+        if select_row!=-1:
+            self.customer_id.setEnabled(False)
+            customer_id = self.result_table.item(select_row, 0).text().strip()
+            first_name = self.result_table.item(select_row, 1).text().strip()
+            last_name = self.result_table.item(select_row, 2).text().strip()
+            phone_no =  self.result_table.item(select_row, 3).text().strip()
+            street =  self.result_table.item(select_row, 4).text().strip()
+            city =  self.result_table.item(select_row, 5).text().strip()
+            state =  self.result_table.item(select_row, 6).text().strip()
+            pin_code =  self.result_table.item(select_row, 7).text().strip()
+
+            self.customer_id.setText(customer_id)
+            self.first_name.setText(first_name)
+            self.last_name.setText(last_name)
+            self.phone_no.setText(phone_no)
+            self.street.setText(street)
+            self.city.setText(city)
+            self.state.setText(state)
+            self.pin_code.setText(pin_code)
+        else:
+            QMessageBox.information(self, "Warning", "Please select one student information", QMessageBox.StandardButton.Ok)
+
+    
+    def check_customer_id(self, customer_id):
+
+        result = self.db.search_info(customer_id = customer_id)
+        return result
+    
+    def clear_form_info(self):
+        self.customer_id.clear()
+        self.customer_id.setEnabled(True)
+        self.first_name.clear()
+        self.last_name.clear()
+        self.phone_no.clear()
+        self.street.clear()
+        self.city.clear()
+        self.state.clear()
+        self.pin_code.clear()
+        self.search_info()
     
     def disable_buttons(self):
         for button in self.buttons_list:
@@ -206,33 +313,11 @@ class LoginWindow(QMainWindow):
         for button in self.buttons_list:
             button.setDisabled(False)
 
-    def get_customer_info(self):
-        #Function to retrive data from the form
-        customer_id = self.customer_id.text().strip()
-        first_name = self.first_name.text().strip()
-        last_name = self.last_name.text().strip()
-        phone_no = self.phone_no.text().strip()
-        street = self.street.text().strip()
-        city = self.city.text().strip()
-        state = self.state.text().strip()
-        pin_code = self.pin_code.text().strip()
-
-        ## add pincode information later when table in database is changed with extra column for pin code
-        customer_info = {
-            "customer_id": customer_id,
-            "first_name": first_name,
-            "last_name" : last_name,
-            "phone_no" : phone_no,
-            "street" : street,
-            "city" : city,
-            "state" : state,
-            "pin_code" : pin_code
-        } 
-        return customer_info
-
     def open_signup_window(self):
         self.close()
         signup_window.show()
+
+
 
 class Ui_ItemDetailsWindow(object):
     def __init__(self, pd_id, customer_details):
@@ -561,8 +646,6 @@ class Invoice_MainWindow(object):
         sha256_hash = hashlib.sha256(input_bytes).hexdigest()
 
         return sha256_hash
-
-
 
 
 from PyQt5.QtWidgets import QToolButton, QMainWindow, QApplication

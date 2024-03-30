@@ -1,6 +1,8 @@
 import mysql.connector
 
 class connectDatabase:
+
+    ## use your own sql credentials to login to your database
     def __init__(self):
         self._host = "localhost"
         self._port = 3306
@@ -39,13 +41,38 @@ class connectDatabase:
         finally:
             self.con.close()
 
-    def add_customer_info(self, first_name, last_name, phone_no, street, city, state, pswd):
+    def add_customer_info(self, first_name, last_name, phone_no, street, city, state, pin_code, pswd):
         self.connect_db()
 
         sql = f"""
-            INSERT INTO customer (first_name, last_name, phone_no, street, city, state, password)
-            VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}','{pswd}');
+            INSERT INTO customer (first_name, last_name, phone_no, street, city, state, pin_code, password)
+VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{pin_code},'{pswd}')
         """
+        try:
+            self.cursor.execute(sql)
+            self.con.commit()
+        finally:
+            self.con.close()
+
+    def update_customer_info(self, customer_id, first_name, last_name, phone_no, street, city, state, pin_code):
+        self.connect_db()
+
+        sql = f"""
+            UPDATE CUSTOMER SET first_name = '{first_name}',last_name = '{last_name}', phone_no = '{phone_no}', street = '{street}', city = '{city}', state = '{state}', pin_code = {int(pin_code)}
+            where customer_id = {customer_id};
+        """ 
+        try:
+            self.cursor.execute(sql)
+            self.con.commit()
+        finally:
+            self.con.close()
+
+    def delete_customer_info(self, customer_id):
+        self.connect_db()
+
+        sql = f"""
+            DELETE FROM customer where customer_id = {customer_id}
+        """ 
         try:
             self.cursor.execute(sql)
             self.con.commit()
@@ -55,6 +82,73 @@ class connectDatabase:
             return E
         finally:
             self.con.close()
+
+    def search_customer_info(self, customer_id = None, first_name = None, last_name = None, phone_no = None, street = None, city = None, state = None, pin_code = None):
+        self.connect_db()
+
+        condition = ""
+
+        if customer_id:
+            ## customer_id is an integer in our tables
+            condition += f"customer_id = {customer_id}"
+        else:
+            if first_name:
+                if condition:
+                    condition += f"and first_name LIKE '%{first_name}%'"
+                else:
+                    condition += f"first_name LIKE '%{first_name}%'"
+            if last_name:
+                if condition:
+                    condition += f"and last_name LIKE '%{last_name}%'"
+                else:
+                    condition += f"last_name LIKE '%{last_name}%'"
+            if phone_no:
+                if condition:
+                    condition += f"and phone_no = '{phone_no}'"
+                else:
+                    condition += f"phone_no = '{phone_no}'"
+            if street:
+                if condition:
+                    condition += f"and street = '{street}'"
+                else:
+                    condition += f"street = '{street}'"
+            if state:
+                if condition:
+                    condition += f"and state = '{state}'"
+                else:
+                    condition += f"state = '{state}'"
+            if city:
+                if condition:
+                    condition += f"and city = '{city}'"
+                else:
+                    condition += f"city = '{city}'"
+            if pin_code:
+                if condition:
+                    condition += f"and pin_code LIKE '%{pin_code}%'"
+                else:
+                    condition += f"pin_code LIKE '%{pin_code}%'"
+
+            
+        if condition:
+            sql = f"""
+                select customer_id,first_name,last_name,phone_no,street,city,state,pin_code from customer where {condition};
+            """ 
+        else:
+            sql = f"""
+                select customer_id,first_name,last_name,phone_no,street,city,state,pin_code from customer;
+            """ 
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        except Exception as E:
+
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+
 
     def add_order_info(self, customer_id, payment_method, amt, transaction_id, order_date, order_time, delivery_agent_id , delivery_date, delivery_status):
         self.connect_db()
@@ -97,23 +191,6 @@ class connectDatabase:
         sql = f"""
             INSERT INTO order_details (order_id, product_id, quantity, cost_per_piece, total)
             VALUES({order_id},'{product_id}','{qty}','{cost_per_piece}','{total}');
-        """ 
-        try:
-            self.cursor.execute(sql)
-            self.con.commit()
-        except Exception as E:
-
-            self.con.rollback()
-            return E
-        finally:
-            self.con.close()
-
-    def update_customer_info(self, customer_id, first_name, last_name, phone_no, street, city, state, pswd):
-        self.connect_db()
-
-        sql = f"""
-            UPDATE CUSTOMER SET firstname = '{first_name}',lastname = '{last_name}', phone_no = '{phone_no}', street = '{street}', city = '{city}', state = '{state}', password = '{pswd}'
-            where customer_id = {customer_id};
         """ 
         try:
             self.cursor.execute(sql)
@@ -294,69 +371,5 @@ VALUES ({customer_id}, {product_id}, '{product_name}', {quantity}, {price}, {tot
         finally:
             self.con.close()
 
-    def search_customer_info(self, customer_id = None, first_name = None, last_name = None, phone_no = None, street = None, city = None, state = None, pin_code = None):
-        self.connect_db()
-
-        condition = ""
-
-        if customer_id:
-            ## customer_id is an integer in our tables
-            condition += f"customer_id = {customer_id}"
-        else:
-            if first_name:
-                if condition:
-                    condition += f"and first_name LIKE '%{first_name}%'"
-                else:
-                    condition += f"first_name LIKE '%{first_name}%'"
-            if last_name:
-                if condition:
-                    condition += f"and last_name LIKE '%{last_name}%'"
-                else:
-                    condition += f"last_name LIKE '%{last_name}%'"
-            if phone_no:
-                if condition:
-                    condition += f"and phone_no = '{phone_no}'"
-                else:
-                    condition += f"phone_no = '{phone_no}'"
-            if street:
-                if condition:
-                    condition += f"and street = '{street}'"
-                else:
-                    condition += f"street = '{street}'"
-            if state:
-                if condition:
-                    condition += f"and state = '{state}'"
-                else:
-                    condition += f"state = '{state}'"
-            if city:
-                if condition:
-                    condition += f"and city = '{city}'"
-                else:
-                    condition += f"city = '{city}'"
-            if pin_code:
-                if condition:
-                    condition += f"and pin_code LIKE '%{pin_code}%'"
-                else:
-                    condition += f"pin_code LIKE '%{pin_code}%'"
-
-            
-        if condition:
-            sql = f"""
-                select customer_id,first_name,last_name,phone_no,street,city,state,pin_code from customer where {condition};
-            """ 
-        else:
-            sql = f"""
-                select customer_id,first_name,last_name,phone_no,street,city,state,pin_code from customer;
-            """ 
-        try:
-            self.cursor.execute(sql)
-            result = self.cursor.fetchall()
-            return result
-        
-        except Exception as E:
-
-            self.con.rollback()
-            return E
-        finally:
-            self.con.close()
+    
     
