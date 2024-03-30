@@ -7,6 +7,8 @@ from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtMultimedia import QSound
 from admin_login import Ui_MainWindow
 from connect_database import connectDatabase
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtMultimedia import QSound
 import hashlib
 import datetime
 
@@ -318,7 +320,6 @@ class LoginWindow(QMainWindow):
         signup_window.show()
 
 
-
 class Ui_ItemDetailsWindow(object):
     def __init__(self, pd_id, customer_details):
         self.db = connectDatabase()
@@ -495,17 +496,7 @@ class Ui_ItemDetailsWindow(object):
         self.label_6.setText(_translate("MainWindow", "Phone No"))
         self.label_8.setText(_translate("MainWindow", "Address"))
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-import hashlib
-from PyQt5.QtMultimedia import QSound
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-import hashlib
-from PyQt5.QtMultimedia import QSound
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-import hashlib
-from PyQt5.QtMultimedia import QSound
 
 class Invoice_MainWindow(object):
     def __init__(self, comboText, myCustomer, product_id, quantity, price, total):
