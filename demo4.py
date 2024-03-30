@@ -352,7 +352,7 @@ class Ui_ItemDetailsWindow(object):
 
         self.label_9 = QtWidgets.QLabel(self.widget1)
         self.label_9.setWordWrap(True)
-        self.label_9.setText(self.customer_details["street"] + " " + self.customer_details["city"] + " " + self.customer_details["state"])
+        self.label_9.setText(self.customer_details["street"] + " " + self.customer_details["city"] + " " + self.customer_details["state"] + " , pincode - " + str(self.customer_details["pin_code"]))
         self.label_9.setObjectName("label_9")
 
         self.gridLayout_2.addWidget(self.label_9, 2, 1, 1, 1)
@@ -360,7 +360,7 @@ class Ui_ItemDetailsWindow(object):
         self.pushButton = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton.setGeometry(QtCore.QRect(70, 410, 601, 41))
         self.pushButton.setObjectName("pushButton")
-        self.pushButton.clicked.connect(lambda checked : self.order_product(MainWindow, self.comboBox.currentText(), self.customer_details, self.product_id, self.quantity_spinbox.value(), self.product_price))
+        self.pushButton.clicked.connect(lambda checked : self.order_product(MainWindow, self.comboBox.currentText(), self.customer_details, [self.product_id], [self.quantity_spinbox.value()], [self.product_price], self.quantity_spinbox.value()*self.product_price))
 
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -379,10 +379,10 @@ class Ui_ItemDetailsWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-    def order_product(self, MainWindow, comboText, customer_details, p_id, qty, price):
+    def order_product(self, MainWindow, comboText, customer_details, p_id, qty, price, total):
         MainWindow.close()
         self.invoice_details_window = QtWidgets.QMainWindow()
-        self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price)
+        self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
         self.ui.setupUi(self.invoice_details_window)
 
         # self.ui.label.setText(f"Item Details for {item_name}")
@@ -410,14 +410,14 @@ class Ui_ItemDetailsWindow(object):
         self.label_8.setText(_translate("MainWindow", "Address"))
 
 class Invoice_MainWindow(object):
-    def __init__(self, comboText, myCustomer, product_id, quantity, price):
+    def __init__(self, comboText, myCustomer, product_id, quantity, price, total):
         self.db = connectDatabase()
         self.comboText = comboText
         self.product_id = product_id
         self.paymentMethod = comboText
-        self.total = quantity*price
-        self.quantity = quantity
-        self.price = price
+        self.total = total
+        self.quantity = quantity                ## this is a list
+        self.price = price                      ## this is a list
         self.myCustomer = myCustomer
         self.order_date = datetime.date.today()
         self.order_time = datetime.datetime.now().time()
@@ -438,7 +438,12 @@ class Invoice_MainWindow(object):
         order_details = self.db.search_order_info(self.transaction_id)
         print(order_details)
         self.order_id = order_details[0]["order_id"]
-        self.db.add_order_details_info(self.order_id, self.product_id, self.quantity, self.price, self.price*self.quantity)
+
+        print(self.product_id)
+        print(self.price)
+        print(self.quantity)
+        for i in range(len(self.product_id)):
+            self.db.add_order_details_info(self.order_id, self.product_id[i], self.quantity[i], self.price[i], self.price[i]*self.quantity[i])
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -581,8 +586,8 @@ class Invoice_MainWindow(object):
 
 
 from PyQt5.QtWidgets import QToolButton, QMainWindow, QApplication
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtCore import QSize
+from PyQt5.QtGui import QIcon, QPixmap, QColor
+from PyQt5.QtCore import QSize, QTimer, Qt
 
 class CustomToolButton(QToolButton):
     def __init__(self, icon_path, parent=None):
@@ -596,6 +601,288 @@ class CustomToolButton(QToolButton):
         # Dynamically adjust the icon size based on the button size
         icon_size = min(self.width(), self.height()) * 0.8  # Set icon size to 80% of button size
         self.setIconSize(QSize(icon_size, icon_size))
+
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel
+from PyQt5.QtGui import QColor, QPixmap
+from PyQt5.QtCore import QTimer, Qt
+
+class PopupDialog(QDialog):
+    def __init__(self, message, icon_path, parent=None):
+        super().__init__(parent)
+        
+        self.setWindowTitle("Notification")
+        self.setWindowFlag(Qt.FramelessWindowHint)  # Remove window frame
+        self.setAttribute(Qt.WA_TranslucentBackground)  # Make window transparent
+        self.setMinimumSize(200, 200)  # Set minimum size to create a square shape
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Add icon
+        self.icon_label = QLabel()
+        self.icon_label.setAlignment(Qt.AlignCenter)  # Align icon in the center
+        pixmap = QPixmap('check_icon3.jpg').scaledToHeight(225)  # Scale pixmap to desired height
+        self.icon_label.setPixmap(pixmap)
+        layout.addWidget(self.icon_label)
+        
+        # Add message
+        self.message_label = QLabel(message)
+        self.message_label.setStyleSheet("font-size: 14px; color: black;")
+        self.message_label.setAlignment(Qt.AlignCenter)
+        self.message_label.setWordWrap(True)  # Enable text wrapping
+        layout.addWidget(self.message_label)
+        
+        self.setLayout(layout)
+        
+        # Set background color to green
+        self.setStyleSheet("background-color: white;")
+        
+        # Close the dialog after 2 seconds
+        QTimer.singleShot(700, self.close)
+
+
+class CartPage(QtWidgets.QMainWindow):
+    def __init__(self, myCustomer):
+        super().__init__()
+        self.db = connectDatabase()
+        self.customer_details = myCustomer[0]
+        self.customer_id = self.customer_details["customer_id"]
+        self.cart_items = self.db.get_cart_info(self.customer_id)
+        self.qty_spin_boxes = []
+        self.item_prices = []
+        self.product_ids = []
+        self.item_quantities = []
+        print(self.cart_items)
+
+    def setupUi(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(814, 800)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.centralwidget.setStyleSheet("background-color: #f0f0f0;")
+
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setObjectName("verticalLayout")
+
+        self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
+        self.scrollArea.setMouseTracking(True)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollArea.setStyleSheet("background-color: transparent;")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 40, 1222, 1222))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.verticalLayout.addWidget(self.scrollArea)
+        self.verticalLayout.setContentsMargins(10, 10, 10, 10)
+
+        initial_total = 0
+
+        for customer_id, pd_id, item_name, quantity, item_rate, item_total, item_image in self.cart_items:
+            frame = QtWidgets.QFrame(self.scrollAreaWidgetContents)
+            frame.setMinimumSize(QtCore.QSize(200, 200))
+            frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+            frame.setFrameShadow(QtWidgets.QFrame.Raised)
+            frame.setObjectName("frame")
+            frame.setStyleSheet("background-color: #ffffff; border-radius: 10px;")
+
+            item_photo = QtWidgets.QLabel(frame)
+            item_photo.setGeometry(QtCore.QRect(20, 50, 111, 121))
+            item_photo.setText("")
+            item_photo.setPixmap(QtGui.QPixmap(item_image))
+            item_photo.setScaledContents(True)
+            item_photo.setObjectName(f"{item_name.lower()}_photo")
+
+            item_title = QtWidgets.QLabel(frame)
+            item_title.setGeometry(QtCore.QRect(150, 30, 131, 41))
+            item_title.setObjectName(f"{item_name.lower()}_label")
+            item_title.setText(item_name)
+            item_title.setWordWrap(True)
+            item_title.setStyleSheet("font-weight: bold; font-size: 14px;")
+
+            item_price = QtWidgets.QLabel(frame)
+            item_price.setGeometry(QtCore.QRect(150, 60, 131, 41))
+            item_price.setObjectName(f"{item_name.lower()}_price_label")
+            item_price.setText(f"Rs. {item_rate}")
+            item_price.setWordWrap(True)
+            item_price.setStyleSheet("font-weight: bold; font-size: 14px;")
+
+            quantity_label = QtWidgets.QLabel(frame)
+            quantity_label.setGeometry(QtCore.QRect(150, 90, 131, 41))
+            quantity_label.setObjectName(f"{item_name.lower()}_Quantity_label")
+            quantity_label.setText(f"Quantity: ")
+            quantity_label.setWordWrap(True)
+            quantity_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+
+            quantity_spinbox = QtWidgets.QSpinBox(frame)
+            quantity_spinbox.setGeometry(QtCore.QRect(240, 90, 131, 41))
+            quantity_spinbox.setWrapping(True)
+            quantity_spinbox.setObjectName(f"{item_name.lower()}_spinBox")
+            quantity_spinbox.setRange(0, 2147483647)
+            quantity_spinbox.setValue(quantity)
+            quantity_spinbox.setStyleSheet("""
+                QSpinBox {
+                    border: 1px solid black;
+                }
+            """)
+            initial_total += item_total
+            quantity_spinbox.valueChanged.connect(self.calculate_total)
+            quantity_spinbox.valueChanged.connect(self.update_quantity_in_db)
+            self.qty_spin_boxes.append(quantity_spinbox)
+            self.item_prices.append(item_rate)
+            self.product_ids.append(pd_id)
+            self.item_quantities.append(quantity)
+            self.verticalLayout_2.addWidget(frame)
+
+        frame = QtWidgets.QFrame(self.scrollAreaWidgetContents)
+        frame.setMinimumSize(QtCore.QSize(200, 400))
+        frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        frame.setObjectName("frame")
+        frame.setStyleSheet("background-color: #ffffff; border-radius: 10px;")
+
+        self.total_amount = initial_total
+
+        self.total_label = QtWidgets.QLabel(frame)
+        self.total_label.setGeometry(QtCore.QRect(70, 180, 300, 100))
+        self.total_label.setWordWrap(True)
+        self.total_label.setObjectName("total_label")
+        self.total_label.setStyleSheet("font-weight: bold; font-size: 18px;")
+        self.total_label.setText(f"Total : {initial_total}")
+        self.verticalLayout_2.addWidget(frame)
+
+        self.comboBox = QtWidgets.QComboBox(frame)
+        self.comboBox.setGeometry(QtCore.QRect(170, 120, 221, 22))
+        self.comboBox.setObjectName("comboBox")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.addItem("")
+        self.comboBox.setStyleSheet("QComboBox { border: 1px solid black; }")
+
+        self.label_5 = QtWidgets.QLabel(frame)
+        self.label_5.setGeometry(QtCore.QRect(70, 120, 100, 70))
+        self.label_5.setObjectName("label_5")
+        self.label_5.setWordWrap(True)
+        self.label_5.setAlignment(QtCore.Qt.AlignLeft)
+        self.label_5.setStyleSheet("font-weight: bold; font-size: 12px;")
+
+        self.widget1 = QtWidgets.QWidget(frame)
+        self.widget1.setGeometry(QtCore.QRect(460, 100, 231, 131))
+        self.widget1.setObjectName("widget1")
+
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.widget1)
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_2.setObjectName("gridLayout_2")
+
+        self.label_10 = QtWidgets.QLabel(self.widget1)
+        self.label_10.setWordWrap(True)
+        self.label_10.setObjectName("label_10")
+        self.label_10.setText("Customer Name:")
+        self.label_10.setStyleSheet("font-weight: bold; font-size: 12px;")
+
+        self.gridLayout_2.addWidget(self.label_10, 0, 0, 1, 1)
+
+        self.label_11 = QtWidgets.QLabel(self.widget1)
+        self.label_11.setWordWrap(True)
+        self.label_11.setText(self.customer_details["first_name"] + " " + self.customer_details["last_name"])
+        self.label_11.setObjectName("label_11")
+
+        self.gridLayout_2.addWidget(self.label_11, 0, 1, 1, 1)
+
+        self.label_6 = QtWidgets.QLabel(self.widget1)
+        self.label_6.setWordWrap(True)
+        self.label_6.setObjectName("label_6")
+        self.label_6.setText("Phone Number:")
+        self.label_6.setStyleSheet("font-weight: bold; font-size: 12px;")
+
+        self.gridLayout_2.addWidget(self.label_6, 1, 0, 1, 1)
+
+        self.label_7 = QtWidgets.QLabel(self.widget1)
+        self.label_7.setWordWrap(True)
+        self.label_7.setText(self.customer_details["phone_no"])
+        self.label_7.setObjectName("label_7")
+
+        self.gridLayout_2.addWidget(self.label_7, 1, 1, 1, 1)
+
+        self.label_8 = QtWidgets.QLabel(self.widget1)
+        self.label_8.setWordWrap(True)
+        self.label_8.setObjectName("label_8")
+        self.label_8.setText("Address:")
+        self.label_8.setStyleSheet("font-weight: bold; font-size: 12px;")
+
+        self.gridLayout_2.addWidget(self.label_8, 2, 0, 1, 1)
+
+        self.label_9 = QtWidgets.QLabel(self.widget1)
+        self.label_9.setWordWrap(True)
+        self.label_9.setText(self.customer_details["street"] + " " + self.customer_details["city"] + " " + self.customer_details["state"] + " , pincode - " + str(self.customer_details["pin_code"]))
+        self.label_9.setObjectName("label_9")
+
+        self.gridLayout_2.addWidget(self.label_9, 2, 1, 1, 1)
+
+        self.pushButton = QtWidgets.QPushButton(frame)
+        self.pushButton.setGeometry(QtCore.QRect(70, 300, 601, 41))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton.setText("Place Order")
+        self.pushButton.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold;")
+        self.pushButton.clicked.connect(lambda checked : self.order_product(MainWindow, self.comboBox.currentText(), self.customer_details, self.product_ids, self.item_quantities, self.item_prices, self.total_amount))
+
+        self.verticalLayout.addWidget(self.pushButton)
+
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def order_product(self, MainWindow, comboText, customer_details, p_id, qty, price, total):
+        MainWindow.close()
+        self.invoice_details_window = QtWidgets.QMainWindow()
+        self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
+        self.ui.setupUi(self.invoice_details_window)
+
+        # self.ui.label.setText(f"Item Details for {item_name}")
+        self.invoice_details_window.show()
+    
+    def update_quantity_in_db(self):
+        index = 0
+        for qty_boxes in self.qty_spin_boxes:
+            qty = qty_boxes.value()
+            self.item_quantities[index] = qty
+            pd_id = self.product_ids[index]
+            item_wise_total = qty*self.item_prices[index]
+            self.db.update_cart(self.customer_id, pd_id, qty, item_wise_total)
+            index += 1
+
+    def calculate_total(self):
+        self.total_amount = 0
+        index = 0
+        for i in self.qty_spin_boxes:
+            quantity = i.value()
+            self.total_amount += quantity*self.item_prices[index]
+            index += 1
+
+        self.total_label.setText(f"Total : {self.total_amount}")
+        print(self.total_label.text())
+    
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.label_10.setText(_translate("MainWindow", "Receipent\'s name"))
+        self.label_6.setText(_translate("MainWindow", "Phone No"))
+        self.label_8.setText(_translate("MainWindow", "Address"))
+        self.comboBox.setItemText(0, _translate("MainWindow", "Credit Card"))
+        self.comboBox.setItemText(1, _translate("MainWindow", "Debit Card"))
+        self.comboBox.setItemText(2, _translate("MainWindow", "Cash On Delivery"))
+        self.comboBox.setItemText(3, _translate("MainWindow", "UPI"))
+        self.label_5.setText(_translate("MainWindow", "Payment Options"))
+        self.pushButton.setText(_translate("MainWindow", "PROCEED TO CHECKOUT"))
 
 
 class HomePage(QtWidgets.QMainWindow):
@@ -698,7 +985,7 @@ class HomePage(QtWidgets.QMainWindow):
             item_addtocart.setObjectName(f"{item_name.lower()}_button")
             item_addtocart.setText("ADD TO CART")
             item_addtocart.setStyleSheet("background-color: #4CAF50; color: white; border-radius: 5px;")  # Styled button
-            # item_addtocart.clicked.connect(lambda checked, name=item_name: self.show_item_details(name))
+            item_addtocart.clicked.connect(lambda checked, id=pd_id: self.add_to_cart(self.myCustomer[0]["customer_id"], id))
 
             # Add buy now button
             item_buynow = QtWidgets.QPushButton(frame)
@@ -728,6 +1015,33 @@ class HomePage(QtWidgets.QMainWindow):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    def add_to_cart(self,customer_id,product_id):
+
+        cart_result = self.db.get_AllCart_info()
+        current_quantity = 0
+        price = 0
+        flag = False
+        for row,info in enumerate(cart_result):
+            if info["customer_id"] == customer_id and info["product_id"] == product_id:
+                current_quantity = info["quantity"]
+                price = info["price"]
+                flag = True
+                break
+        if flag:
+            self.db.update_cart(customer_id, product_id, current_quantity+1, price*(current_quantity+1))
+        else:
+            (name, price, url) = self.db.search_product_info(product_id)[0]
+            print(name)
+            print(price)
+            print(url)
+            self.db.add_product_to_cart(customer_id, product_id, name, price, price, 1, url)  # Quantity is set to 1 by default tehrefore initially total is same as price of the 1 product
+        
+        self.show_notification()
+    
+    def show_notification(self):
+        dialog = PopupDialog("Item added to cart", self)
+        dialog.exec_()
+    
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
@@ -744,10 +1058,10 @@ class HomePage(QtWidgets.QMainWindow):
         
     def view_basket(self):
         # Implement the logic to show the basket contents here
-        self.item_details_window = QtWidgets.QMainWindow()
-        self.ui = Ui_ItemDetailsWindow()
-        self.ui.setupUi(self.item_details_window)
-        self.item_details_window.show()
+        self.cart_details_window = QtWidgets.QMainWindow()
+        self.ui = CartPage(self.myCustomer)
+        self.ui.setupUi(self.cart_details_window)
+        self.cart_details_window.show()
 
 
 

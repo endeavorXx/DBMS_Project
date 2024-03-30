@@ -159,6 +159,86 @@ VALUES({customer_id},'{payment_method}',{amount},'{transaction_id}','{order_date
             return E
         finally:
             self.con.close()
+
+    def get_AllCart_info(self):
+        self.connect_db()
+        sql = f"""
+            SELECT * from cart;
+        """
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        except Exception as E:
+
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+
+    def update_cart(self, customer_id,product_id,new_quantity, new_total):
+        self.connect_db()
+
+        sql1 = f"""
+            UPDATE cart
+            SET quantity = {new_quantity}
+            WHERE customer_id = {customer_id}
+            AND product_id = {product_id};
+        """ 
+
+        sql2 = f"""
+            UPDATE cart
+            SET total = {new_total}
+            WHERE customer_id = {customer_id}
+            AND product_id = {product_id};
+        """
+        try:
+            self.cursor.execute(sql1)
+            self.cursor.execute(sql2)
+            self.con.commit()
+        except Exception as E:
+
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+
+    def get_cart_info(self, customer_id):
+        self.connect_db()
+        self.cursor = self.con.cursor(dictionary = False)
+        sql = f"""
+            SELECT * FROM cart where customer_id = {customer_id};
+        """ 
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        except Exception as E:
+
+            self.con.rollback()
+            return E
+        finally:
+            self.cursor = self.con.cursor(dictionary = True)
+            self.con.close()
+    
+    def add_product_to_cart(self, customer_id, product_id, product_name, price, total, quantity, url):
+        self.connect_db()
+
+        sql = f"""
+            INSERT INTO cart (customer_id, product_id, product_name, quantity, price, total, url)
+VALUES ({customer_id}, {product_id}, '{product_name}', {quantity}, {price}, {total}, '{url}');
+        """ 
+        try:
+            self.cursor.execute(sql)
+            self.con.commit()
+        # except Exception as E:
+        #     print("Query not executed")
+        #     self.con.rollback()
+        #     return E
+        finally:
+            self.con.close()
     
     def search_product_info(self, product_id):
         self.connect_db()
