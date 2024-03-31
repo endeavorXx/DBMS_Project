@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtMultimedia import QSound
 from admin_login import Ui_MainWindow
+from login_ui import LoginMainWindow
 from connect_database import connectDatabase
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtMultimedia import QSound
@@ -47,10 +48,13 @@ class SignupWindow(QMainWindow):
 class LoginWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        loadUi('login_ui.ui', self)  # Load the UI from the converted Python file   
+        self.myLoginWindow = QtWidgets.QMainWindow()
+        self.loginui = LoginMainWindow()
+        self.loginui.setupUi(self.myLoginWindow)
+        self.myLoginWindow.show()   
         self.db = connectDatabase()
-        self.login_button.clicked.connect(self.login)
-        self.signup_button.clicked.connect(self.open_signup_window)
+        self.loginui.login_button.clicked.connect(self.login)
+        self.loginui.signup_button.clicked.connect(self.open_signup_window)
         
     def login(self):
 
@@ -1138,6 +1142,5 @@ if __name__ == "__main__":
     login_window = LoginWindow()
     signup_window = SignupWindow()
     
-    login_window.show()
 
     sys.exit(app.exec_())
