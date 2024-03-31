@@ -149,6 +149,39 @@ VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{
         finally:
             self.con.close()
 
+    def search_order_info(self,order_id = None,customer_id = None,transaction_id = None):
+        self.connect_db()
+        condition = ""
+
+        if customer_id:
+            condition += f"customer_id = {customer_id}"
+        else:
+            if transaction_id:
+                if condition:
+                    condition += f"and transaction_id = '{transaction_id}'"
+                else:
+                    condition += f"transaction_id = '{transaction_id}'"
+            else:
+                if order_id:
+                    if condition:
+                        condition += f"and order_id = {order_id}"
+                    else:
+                        condition += f"order_id = {order_id}"
+        if condition:
+            sql = f"""
+                SELECT * FROM orders where {condition}
+            """ 
+        else:
+            sql = f"""
+                SELECT * FROM orders
+            """
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        finally:
+            self.con.close()
 
     def add_order_info(self, customer_id, payment_method, amt, transaction_id, order_date, order_time, delivery_agent_id , delivery_date, delivery_status):
         self.connect_db()
@@ -167,23 +200,7 @@ VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{
         finally:
             self.con.close()
 
-    def search_order_info(self,transaction_id):
-        self.connect_db()
-
-        sql = f"""
-            SELECT * FROM orders where transaction_id = '{transaction_id}'
-        """ 
-        try:
-            self.cursor.execute(sql)
-            result = self.cursor.fetchall()
-            return result
-        
-        except Exception as E:
-
-            self.con.rollback()
-            return E
-        finally:
-            self.con.close()
+    
 
     def add_order_details_info(self, order_id, product_id, qty, cost_per_piece, total):
         self.connect_db()

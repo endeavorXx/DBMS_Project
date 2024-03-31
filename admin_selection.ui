@@ -6,93 +6,213 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>200</width>
-    <height>205</height>
+    <width>609</width>
+    <height>569</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="verticalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>0</y>
-      <width>201</width>
-      <height>181</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <property name="spacing">
-      <number>0</number>
-     </property>
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item>
-      <widget class="QPushButton" name="pushButton">
-       <property name="text">
-        <string>Dashboard</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_5">
-       <property name="text">
-        <string>Customer </string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_6">
-       <property name="text">
-        <string>Product</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_3">
-       <property name="text">
-        <string>Orders</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_4">
-       <property name="text">
-        <string>Supplies</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButton_2">
-       <property name="text">
-        <string>PushButton</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>200</width>
-     <height>26</height>
-    </rect>
-   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="dashboard_btn">
+          <property name="mouseTracking">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Dashboard</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>icons/dashboard-5-xxl.png</normaloff>icons/dashboard-5-xxl.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>14</width>
+            <height>14</height>
+           </size>
+          </property>
+          <property name="autoExclusive">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="customer_btn">
+          <property name="mouseTracking">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Customer </string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>icons/conference-xl.png</normaloff>icons/conference-xl.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>14</width>
+            <height>14</height>
+           </size>
+          </property>
+          <property name="autoRepeat">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="product_btn">
+          <property name="mouseTracking">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Product</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>icons/product-xl.png</normaloff>icons/product-xl.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>14</width>
+            <height>14</height>
+           </size>
+          </property>
+          <property name="autoExclusive">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="order_btn">
+          <property name="mouseTracking">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Orders</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>icons/notepad-xl.png</normaloff>icons/notepad-xl.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>14</width>
+            <height>14</height>
+           </size>
+          </property>
+          <property name="autoExclusive">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="supplies_btn">
+          <property name="mouseTracking">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Supplies</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>icons/truck-xxl.png</normaloff>icons/truck-xxl.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>14</width>
+            <height>14</height>
+           </size>
+          </property>
+          <property name="autoExclusive">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="vendors_btn">
+          <property name="mouseTracking">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Vendors</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>icons/vendor.png</normaloff>icons/vendor.png</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>14</width>
+            <height>14</height>
+           </size>
+          </property>
+          <property name="autoExclusive">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="exit_btn">
+        <property name="mouseTracking">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>Exit</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>icons/close-window-xl.png</normaloff>icons/close-window-xl.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>14</width>
+          <height>14</height>
+         </size>
+        </property>
+        <property name="autoExclusive">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>

@@ -7,6 +7,8 @@ from PyQt5.QtMultimedia import QSound
 from admin_login import Ui_MainWindow
 from login_ui import LoginMainWindow
 from signup import SignUpMainWindow
+from admin_selection_ui import SelectOption
+from admin_order import AdminOrderWindow
 from connect_database import connectDatabase
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtMultimedia import QSound
@@ -48,81 +50,91 @@ class SignupWindow(QMainWindow):
                 QMessageBox.information(self, "Registration", f"Registration successful", QMessageBox.StandardButton.Ok)
                 self.mySignUpWindow.close()
 
-class LoginWindow(QMainWindow):
+
+class AdminHomePage(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.myLoginWindow = QtWidgets.QMainWindow()
-        self.loginui = LoginMainWindow()
-        self.loginui.setupUi(self.myLoginWindow)
-        self.myLoginWindow.show()   
-        self.db = connectDatabase()
-        self.loginui.login_button.clicked.connect(self.login)
-        self.loginui.signup_button.clicked.connect(self.open_signup_window)
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminchoice = SelectOption()
+        self.adminchoice.setupUi(self.MainWindow)
+        self.MainWindow.show()
+
+        self.dashboard_btn = self.adminchoice.dashboard_btn
+        self.customer_btn = self.adminchoice.customer_btn
+        self.product_btn = self.adminchoice.product_btn
+        self.supplies_btn = self.adminchoice.supplies_btn
+        self.exit_btn = self.adminchoice.exit_btn
+        self.vendors_btn = self.adminchoice.vendors_btn
+        self.orders_btn = self.adminchoice.order_btn
+        self.init_signal_slot()
+
+    def init_signal_slot(self):
+        # self.dashboard_btn.clicked.connect(self.showDashboard)
+        self.customer_btn.clicked.connect(self.showCustomer)
+        # self.product_btn.clicked.connect(self.showProducts)        
+        self.orders_btn.clicked.connect(self.showOrders)  
+        # self.vendors_btn.clicked.connect(self.showVendors)  
+        # self.supplies_btn.clicked.connect(self.showSupplies)  
+        self.exit_btn.clicked.connect(self.getExit)  
+
+    # def showDashboard(self):
         
-    def login(self):
+    def showCustomer(self):
+        self.adminlogin = AdminCustomerPage()
+    # def showProducts(self):
 
-        self.username = self.loginui.username_lineEdit.text()
-        self.password = self.loginui.password_lineEdit.text()
+    def showOrders(self):
+        self.adminlogin = AdminOrdersPage()
 
-        # Perform authentication, e.g., check against a database
-        print(self.username)
-        if (self.username.strip() == 'admin') and (self.password.strip() == 'admin123'):
-            print("Login successful")
-            self.close()
-            self.MainWindow = QtWidgets.QMainWindow()
-            self.adminui = Ui_MainWindow()
-            self.adminui.setupUi(self.MainWindow)
-            self.MainWindow.show()
+    # def showVendors(self):
 
-            self.customer_id = self.adminui.lineEdit
-            # This will validate that input number is int
-            self.customer_id.setValidator(QIntValidator())
+    # def showSupplies(self):
 
-            self.first_name = self.adminui.lineEdit_2
-            self.last_name = self.adminui.lineEdit_3
-            self.phone_no = self.adminui.lineEdit_4
-            self.phone_no.setValidator(QIntValidator())
-            self.street = self.adminui.lineEdit_5
-            self.city = self.adminui.lineEdit_6
-            self.state = self.adminui.lineEdit_7
-            self.pin_code = self.adminui.lineEdit_8
-            self.pin_code.setValidator(QIntValidator())
+    def getExit(self):
+        self.MainWindow.close()
 
-            self.add_btn = self.adminui.addButton
-            self.update_btn = self.adminui.updateButton
-            self.select_btn = self.adminui.selectButton
-            self.search_btn = self.adminui.searchButton
-            self.clear_btn = self.adminui.clearButton
 
-            self.result_table = self.adminui.tableWidget
-            self.result_table.setSortingEnabled(False)
-            self.buttons_list = self.adminui.function_frame.findChildren(QPushButton)
-            # Initialize signal slot connection
 
-            self.init_signal_slot()
+class AdminCustomerPage(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.db = connectDatabase()
 
-            #populate initial data in the table and state/city dropdowns
-            self.search_info()
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminui = Ui_MainWindow()
+        self.adminui.setupUi(self.MainWindow)
+        self.MainWindow.show()
 
-        else:
-            self.authenticate_customer(self.username,self.password)
-            print("Welcome Customer")
+        self.customer_id = self.adminui.lineEdit
+        # This will validate that input number is int
+        self.customer_id.setValidator(QIntValidator())
+
+        self.first_name = self.adminui.lineEdit_2
+        self.last_name = self.adminui.lineEdit_3
+        self.phone_no = self.adminui.lineEdit_4
+        self.phone_no.setValidator(QIntValidator())
+        self.street = self.adminui.lineEdit_5
+        self.city = self.adminui.lineEdit_6
+        self.state = self.adminui.lineEdit_7
+        self.pin_code = self.adminui.lineEdit_8
+        self.pin_code.setValidator(QIntValidator())
+
+        self.add_btn = self.adminui.addButton
+        self.update_btn = self.adminui.updateButton
+        self.select_btn = self.adminui.selectButton
+        self.search_btn = self.adminui.searchButton
+        self.clear_btn = self.adminui.clearButton
+
+        self.result_table = self.adminui.tableWidget
+        self.result_table.setSortingEnabled(False)
+        self.buttons_list = self.adminui.function_frame.findChildren(QPushButton)
+        # Initialize signal slot connection
+
+        self.init_signal_slot()
+
+        #populate initial data in the table and state/city dropdowns
+        self.search_info()
     
-    def authenticate_customer(self,phone,pswd):
-        customer_auth = self.db.get_customer_authentication(phone,pswd)
-
-        if customer_auth:
-            self.close()
-            self.myCustomer = self.db.search_customer_info(None, None, None, self.username)
-            self.MainWindow2 = QtWidgets.QMainWindow()
-            self.home_window = HomePage(self.myCustomer)          
-            self.home_window.setupUi(self.MainWindow2)
-            self.MainWindow2.show()
-        else:
-            ## we can use a pop_up window or something
-            print("Wrong credentials!!")
-
-
     ## To Intialize button with signals
             
     def init_signal_slot(self):
@@ -313,13 +325,137 @@ class LoginWindow(QMainWindow):
         for button in self.buttons_list:
             button.setDisabled(False)
 
+
+class AdminOrdersPage(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.db = connectDatabase()
+
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminorder = AdminOrderWindow()
+        self.adminorder.setupUi(self.MainWindow)
+        self.MainWindow.show()
+        self.order_id = self.adminorder.lineEdit
+        self.transaction_id = self.adminorder.lineEdit_2
+        self.customer_id = self.adminorder.lineEdit_3
+
+        self.search_btn = self.adminorder.searchButton
+        self.clear_btn = self.adminorder.clearButton
+
+        self.result_table = self.adminorder.tableWidget
+        self.result_table.setSortingEnabled(False)
+
+        self.init_signal_slot()
+        self.search_info()
+
+    def init_signal_slot(self):
+        self.search_btn.clicked.connect(self.search_info)
+        self.clear_btn.clicked.connect(self.clearForm)
+
+    def get_order_info(self):
+        #Function to retrive data from the form
+        customer_id = self.customer_id.text().strip()
+        order_id = self.order_id.text().strip()
+        transaction_id = self.transaction_id.text().strip()
+
+        order_info = {
+            "customer_id" : customer_id,
+            "order_id" : order_id,
+            "transaction_id" : transaction_id
+        }
+        return order_info
+    
+    def search_info(self):
+
+        order_info = self.get_order_info()
+
+        order_result = self.db.search_order_info(
+            order_id = order_info["order_id"],
+            customer_id = order_info["customer_id"],
+            transaction_id=order_info["transaction_id"]
+        )
+        self.show_data(order_result)
+
+    def show_data(self,result):
+        if result:
+            self.result_table.setRowCount(0)
+            self.result_table.setRowCount(len(result))
+            for row, info in enumerate(result):
+                info_list = [
+                    info["order_id"],
+                    info["customer_id"],
+                    info["payment_method"],
+                    info["amount"],
+                    info["transaction_id"],
+                    info["order_date"],
+                    info["order_time"],
+                    info["delivery_date"],
+                    info["delivery_status"]
+                ]
+
+                for column,item in enumerate(info_list):
+                    cell_item = QTableWidgetItem(str(item))
+                    self.result_table.setItem(row, column, cell_item)
+        else:
+            self.result_table.setRowCount(0)
+            return 
+
+    def clearForm(self):
+        self.customer_id.clear()
+        self.transaction_id.clear()
+        self.transaction_id.clear()
+        self.search_info()
+
+
+class LoginWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.myLoginWindow = QtWidgets.QMainWindow()
+        self.loginui = LoginMainWindow()
+        self.loginui.setupUi(self.myLoginWindow)
+        self.myLoginWindow.show()   
+        self.db = connectDatabase()
+        self.loginui.login_button.clicked.connect(self.login)
+        self.loginui.signup_button.clicked.connect(self.open_signup_window)
+        
+    def login(self):
+
+        self.username = self.loginui.username_lineEdit.text()
+        self.password = self.loginui.password_lineEdit.text()
+
+        # Perform authentication, e.g., check against a database
+        print(self.username)
+        if (self.username.strip() == 'admin') and (self.password.strip() == 'admin123'):
+            print("Login successful")
+            self.close()
+            self.adminlogin = AdminHomePage()
+
+        else:
+            self.authenticate_customer(self.username,self.password)
+            print("Welcome Customer")
+    
+    def authenticate_customer(self,phone,pswd):
+        customer_auth = self.db.get_customer_authentication(phone,pswd)
+
+        if customer_auth:
+            self.close()
+            self.myCustomer = self.db.search_customer_info(None, None, None, self.username)
+            self.MainWindow2 = QtWidgets.QMainWindow()
+            self.home_window = HomePage(self.myCustomer)          
+            self.home_window.setupUi(self.MainWindow2)
+            self.MainWindow2.show()
+        else:
+            ## we can use a pop_up window or something
+            print("Wrong credentials!!")
+
     def open_signup_window(self):
         self.close()
         signup_window.setupUi()
 
 
-class Ui_ItemDetailsWindow(object):
+class Ui_ItemDetailsWindow(QtWidgets.QMainWindow):
     def __init__(self, pd_id, customer_details):
+        super().__init__()
         self.db = connectDatabase()
         self.product_id = pd_id
         ## customer_details is a list of dictionaries which is returned by sql when self.con.cursor(dictionary = True)
@@ -465,13 +601,23 @@ class Ui_ItemDetailsWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def order_product(self, MainWindow, comboText, customer_details, p_id, qty, price, total):
-        MainWindow.close()
-        self.invoice_details_window = QtWidgets.QMainWindow()
-        self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
-        self.ui.setupUi(self.invoice_details_window)
+        total_quantity = 0
+        for i in qty:
+            total_quantity+=i
+        if total_quantity > 0:
+            MainWindow.close()
+            self.invoice_details_window = QtWidgets.QMainWindow()
+            self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
+            self.ui.setupUi(self.invoice_details_window)
 
-        # self.ui.label.setText(f"Item Details for {item_name}")
-        self.invoice_details_window.show()
+            # self.ui.label.setText(f"Item Details for {item_name}")
+            self.invoice_details_window.show()
+        else:
+            self.close()
+            self.show_notification()
+    def show_notification(self):
+        dialog = PopupDialog("Cart is Empty !!", 'red_cross.jpg', self)
+        dialog.exec_()   
 
 
     def calculate_total(self):
@@ -524,7 +670,7 @@ class Invoice_MainWindow(object):
         print(self.order_time)
         print(self.delivery_date)
         self.db.add_order(self.myCustomer["customer_id"], self.paymentMethod, self.total, self.transaction_id, str(self.order_date), str(self.order_time), str(self.delivery_date), "Pending")
-        order_details = self.db.search_order_info(self.transaction_id)
+        order_details = self.db.search_order_info(transaction_id = self.transaction_id)
         print(order_details)
         self.order_id = order_details[0]["order_id"]
 
@@ -899,13 +1045,19 @@ class CartPage(QtWidgets.QMainWindow):
 
     def order_product(self, MainWindow, comboText, customer_details, p_id, qty, price, total):
         MainWindow.close()
+        total_quantity = 0
+        for i in qty:
+            total_quantity+=i
         if p_id:
-            self.invoice_details_window = QtWidgets.QMainWindow()
-            self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
-            self.ui.setupUi(self.invoice_details_window)
+            if total_quantity > 0:
+                self.invoice_details_window = QtWidgets.QMainWindow()
+                self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
+                self.ui.setupUi(self.invoice_details_window)
 
-            # self.ui.label.setText(f"Item Details for {item_name}")
-            self.invoice_details_window.show()
+                # self.ui.label.setText(f"Item Details for {item_name}")
+                self.invoice_details_window.show()
+            else:
+                self.show_notification()
         else:
             ## show pop-up no item Added to cart
             self.show_notification()
