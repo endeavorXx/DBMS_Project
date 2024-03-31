@@ -1,12 +1,12 @@
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.uic import loadUi
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtMultimedia import QSound
 from admin_login import Ui_MainWindow
 from login_ui import LoginMainWindow
+from signup import SignUpMainWindow
 from connect_database import connectDatabase
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtMultimedia import QSound
@@ -16,34 +16,37 @@ import datetime
 class SignupWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        loadUi('signup.ui', self)  # Load the UI for signup window
-        self.enterButton.clicked.connect(self.register)
+    def setupUi(self):
+        self.mySignUpWindow = QtWidgets.QMainWindow()
+        self.signupui = SignUpMainWindow()
+        self.signupui.setupUi(self.mySignUpWindow)
+        self.mySignUpWindow.show()   
+        self.db = connectDatabase()
+        self.signupui.enterButton.clicked.connect(self.register)
         
     def register(self):
-        self.firstname = self.lineEdit.text()
-        self.lastname = self.lineEdit.text()
-        self.phone_no = self.lineEdit.text()
-        self.street = self.lineEdit.text()
-        self.city = self.lineEdit.text()
-        self.state = self.lineEdit.text()
-        self.password = self.lineEdit.text()
+        self.firstname = self.signupui.lineEdit.text().strip()
+        self.lastname = self.signupui.lineEdit_2.text().strip()
+        self.phone_no = self.signupui.lineEdit_3.text().strip()
+        self.street = self.signupui.lineEdit_4.text().strip()
+        self.city = self.signupui.lineEdit_5.text().strip()
+        self.state = self.signupui.lineEdit_6.text().strip()
+        self.pin_code = self.signupui.lineEdit_7.text().strip()
+        
+        self.password = self.signupui.lineEdit_8.text().strip()
 
-        # Upload details to the database  
+        # Upload details to the database -- Complete check aagainst phone_no, phone_must be unique 
 
-        # if (self.firstname == "" or self.lastname == "" or self.phone_no == "" or self.street == "" or self.city == "" or self.state == "" or self.password == ""):
-        #     self.enterButton.clicked.connect(self.show_popup)
-        # else:
-        self.close()
-        login_window.show()
-
-    def show_popup(self):
-        msg = QMessageBox()
-        msg.setWindowTitle("Warning!!")
-        msg.setText("Wrong credentials")
-
-        #to show the message box
-        x = msg.exec_()
-
+        if (self.firstname == "" or self.lastname == "" or self.phone_no == "" or self.street == "" or self.city == "" or self.state == "" or self.password == ""):
+            QMessageBox.information(self, "Missing Information", f"Please fill all fields", QMessageBox.StandardButton.Ok)
+        else:
+            l = self.db.search_customer_info(phone_no=self.phone_no)
+            if l:
+                QMessageBox.information(self, "Information", f"User already Registered", QMessageBox.StandardButton.Ok)
+            else:
+                self.db.add_customer_info(self.firstname,self.lastname,self.phone_no,self.street,self.city,self.state, self.pin_code,self.password)
+                QMessageBox.information(self, "Registration", f"Registration successful", QMessageBox.StandardButton.Ok)
+                self.mySignUpWindow.close()
 
 class LoginWindow(QMainWindow):
     def __init__(self):
@@ -58,18 +61,9 @@ class LoginWindow(QMainWindow):
         
     def login(self):
 
-        self.username = self.username_lineEdit.text()
-        self.password = self.password_lineEdit.text()
-        # customer_result = self.db.search_customer_info(
-        #     customer_id = customer_info["customer_id"],
-        #     first_name = customer_info["first_name"],
-        #     last_name = customer_info["last_name"],
-        #     phone_no = customer_info["phone_no"],
-        #     street = customer_info["street"],
-        #     city = customer_info["city"],
-        #     state = customer_info["state"],
-        #     pin_code = customer_info["pin_code"],
-        # )
+        self.username = self.loginui.username_lineEdit.text()
+        self.password = self.loginui.password_lineEdit.text()
+
         # Perform authentication, e.g., check against a database
         print(self.username)
         if (self.username.strip() == 'admin') and (self.password.strip() == 'admin123'):
@@ -321,7 +315,7 @@ class LoginWindow(QMainWindow):
 
     def open_signup_window(self):
         self.close()
-        signup_window.show()
+        signup_window.setupUi()
 
 
 class Ui_ItemDetailsWindow(object):

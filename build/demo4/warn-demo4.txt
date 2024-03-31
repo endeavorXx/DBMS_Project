@@ -46,7 +46,3 @@ missing module named opentelemetry - imported by mysql.connector.opentelemetry.c
 missing module named 'dns.resolver' - imported by mysql.connector.pooling (optional)
 missing module named dns - imported by mysql.connector.pooling (optional)
 missing module named 'opentelemetry.trace' - imported by mysql.connector.opentelemetry.context_propagation (conditional)
-missing module named PyQt5.uic.port_v2 - imported by PyQt5.uic.properties (conditional)
-missing module named 'PyQt5.uic.port_v2.string_io' - imported by PyQt5.uic (delayed, conditional)
-missing module named 'PyQt5.uic.port_v2.as_string' - imported by PyQt5.uic.Compiler.qtproxies (conditional), PyQt5.uic.Compiler.qobjectcreator (conditional)
-missing module named 'PyQt5.uic.port_v2.proxy_base' - imported by PyQt5.uic.Compiler.qtproxies (conditional)
