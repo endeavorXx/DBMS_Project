@@ -1,37 +1,44 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QSpinBox, QLabel, QVBoxLayout, QWidget
+import sys
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QFileDialog, QLabel, QVBoxLayout, QWidget
 from PyQt5.QtCore import Qt
 
-class MainWindow(QMainWindow):
+class FileDialogDropExample(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Real-Time Total Calculation")
-        self.setGeometry(100, 100, 400, 200)
+        self.setWindowTitle("File Dialog with Drag and Drop")
+        self.setGeometry(100, 100, 400, 300)
 
-        layout = QVBoxLayout()
+        self.central_widget = QWidget()
+        self.setCentralWidget(self.central_widget)
 
-        self.item_price = 10  # Example item price
+        self.layout = QVBoxLayout(self.central_widget)
 
-        self.quantity_spinbox = QSpinBox()
-        self.quantity_spinbox.setRange(0, 100)  # Set range for quantity
-        self.quantity_spinbox.valueChanged.connect(self.calculate_total)
+        self.label = QLabel()
+        self.label.setText("Drop Files Here")
+        self.label.setAlignment(Qt.AlignCenter)
+        self.layout.addWidget(self.label)
 
-        self.total_label = QLabel()
+        self.button = QPushButton("Open File Dialog")
+        self.button.clicked.connect(self.open_file_dialog)
+        self.layout.addWidget(self.button)
 
-        layout.addWidget(self.quantity_spinbox)
-        layout.addWidget(self.total_label)
+        # Enable drag and drop events
+        self.setAcceptDrops(True)
+        
 
-        widget = QWidget()
-        widget.setLayout(layout)
-        self.setCentralWidget(widget)
+    def open_file_dialog(self):
+        file_dialog = QFileDialog()
+        file_dialog.setFileMode(QFileDialog.ExistingFiles)
+        if file_dialog.exec_():
+            selected_files = file_dialog.selectedFiles()
+            print("selected file :", selected_files)
+        self.path = selected_files
 
-    def calculate_total(self):
-        quantity = self.quantity_spinbox.value()
-        total_amount = quantity * self.item_price
-        self.total_label.setText(f"Total Amount: {total_amount}")
 
 if __name__ == "__main__":
-    app = QApplication([])
-    window = MainWindow()
+    app = QApplication(sys.argv)
+    window = FileDialogDropExample()
     window.show()
-    app.exec_()
+    
+    sys.exit(app.exec_())

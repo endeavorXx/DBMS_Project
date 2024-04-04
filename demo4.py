@@ -9,6 +9,7 @@ from login_ui import LoginMainWindow
 from signup import SignUpMainWindow
 from admin_selection_ui import SelectOption
 from admin_order import AdminOrderWindow
+from admin_product import AdminProductWindow
 from connect_database import connectDatabase
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtMultimedia import QSound
@@ -71,7 +72,7 @@ class AdminHomePage(QMainWindow):
     def init_signal_slot(self):
         # self.dashboard_btn.clicked.connect(self.showDashboard)
         self.customer_btn.clicked.connect(self.showCustomer)
-        # self.product_btn.clicked.connect(self.showProducts)        
+        self.product_btn.clicked.connect(self.showProducts)        
         self.orders_btn.clicked.connect(self.showOrders)  
         # self.vendors_btn.clicked.connect(self.showVendors)  
         # self.supplies_btn.clicked.connect(self.showSupplies)  
@@ -81,7 +82,8 @@ class AdminHomePage(QMainWindow):
         
     def showCustomer(self):
         self.adminlogin = AdminCustomerPage()
-    # def showProducts(self):
+    def showProducts(self):
+        self.adminlogin = AdminProductPage()
 
     def showOrders(self):
         self.adminlogin = AdminOrdersPage()
@@ -92,7 +94,6 @@ class AdminHomePage(QMainWindow):
 
     def getExit(self):
         self.MainWindow.close()
-
 
 
 class AdminCustomerPage(QMainWindow):
@@ -324,6 +325,178 @@ class AdminCustomerPage(QMainWindow):
     def enable_buttons(self):
         for button in self.buttons_list:
             button.setDisabled(False)
+
+
+class AdminProductPage(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.db = connectDatabase()
+
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminproduct = AdminProductWindow()
+        self.adminproduct.setupUi(self.MainWindow)
+        self.MainWindow.show()
+
+        self.product_id = self.adminproduct.lineEdit
+
+        self.name = self.adminproduct.lineEdit_2
+        self.category = self.adminproduct.lineEdit_3
+        self.price = self.adminproduct.lineEdit_4
+        self.rating = self.adminproduct.lineEdit_6
+        self.qty = self.adminproduct.lineEdit_5
+        self.description = self.adminproduct.lineEdit_7
+        self.url = ""
+
+        self.add_btn = self.adminproduct.addButton
+        self.update_btn = self.adminproduct.updateButton
+        self.select_btn = self.adminproduct.selectButton
+        self.search_btn = self.adminproduct.searchButton
+        self.clear_btn = self.adminproduct.clearButton
+        self.img_btn = self.adminproduct.imgButton
+
+        self.result_table = self.adminproduct.tableWidget
+        self.result_table.setSortingEnabled(False)
+        self.buttons_list = self.adminproduct.function_frame.findChildren(QPushButton)
+        # Initialize signal slot connection
+
+        self.init_signal_slot()
+
+        #populate initial data in the table and state/city dropdowns
+        self.search_info()
+    
+    ## To Intialize button with signals
+            
+    def init_signal_slot(self):
+        # Connect button to their respective functions
+        self.add_btn.clicked.connect(self.add_new_product_info)
+        self.search_btn.clicked.connect(self.search_info)
+        self.update_btn.clicked.connect(self.update_info)        
+        self.select_btn.clicked.connect(self.select_info)  
+        self.clear_btn.clicked.connect(self.clear_form_info)
+        self.img_btn.clicked.connect(self.open_file_dialog)
+
+    def open_file_dialog(self):
+        file_dialog = QFileDialog()
+        file_dialog.setFileMode(QFileDialog.ExistingFiles)
+        if file_dialog.exec_():
+            selected_files = file_dialog.selectedFiles()
+            print("Selected Files:", selected_files) 
+            self.url = selected_files[0]
+
+    def add_new_product_info(self):
+        product_info = self.get_product_info()
+        self.product_id.setEnabled(False)
+
+        print(product_info)
+        if product_info["product_id"]:
+            QMessageBox.information(self, "Alert", f"Product Id is automatically generated", QMessageBox.StandardButton.Ok)
+        
+        if product_info["name"] == "" or product_info["category"] == "" or product_info["price"] == "" or product_info["rating"] == "" or product_info["qty"]=="" :
+             ## Alert that some input fields are missing
+            QMessageBox.information(self, "Missing Information", f"Please fill all fields", QMessageBox.StandardButton.Ok)
+        else:
+            product_info["rating"] = int(product_info["rating"])
+            product_info["price"] = float(product_info["price"])
+            product_info["qty"] = int(product_info["qty"])
+            print(product_info)
+            add_result = self.db.add_product_info(
+                name = product_info["name"],
+                category = product_info["category"],
+                price = product_info["price"],
+                rating = product_info["rating"],
+                qty = product_info["qty"],
+                description = product_info["description"],
+                url = product_info["url"],
+            )
+
+        self.enable_buttons()
+        self.product_id.setEnabled(False)
+        self.search_info()
+
+    def enable_buttons(self):
+        pass
+    
+    def disable_buttons(self):
+        pass
+
+    def get_product_info(self):
+        product_id = self.product_id.text().strip()
+        name = self.name.text().strip()
+        category = self.category.text().strip()
+        price = self.price.text().strip()
+        rating = self.rating.text().strip()
+        qty = self.qty.text().strip()
+        description = self.description.text().strip()
+        url = self.url.strip()
+
+
+        ## add pincode information later when table in database is changed with extra column for pin code
+        product_info = {
+            "product_id": product_id,
+            "name": name,
+            "category" : category,
+            "price" : price,
+            "rating" : rating,
+            "qty" : qty,
+            "description" : description,
+            "url" : url
+        } 
+        # print(product_info)
+        return product_info
+    
+    def search_info(self):
+        product_info = self.get_product_info()
+        print(product_info)
+
+        product_result = self.db.search_product_info_All(
+            product_id = product_info["product_id"],
+            product_name = product_info["name"],
+            product_category = product_info["category"],
+            product_price = product_info["price"],
+            product_rating = product_info["rating"],
+            product_qty = product_info["qty"],
+            product_desc = product_info["description"],
+            image_url = product_info["url"],
+        )
+
+        print(product_result)
+        self.show_data(product_result)
+
+    def show_data(self, result):
+        if result:
+            self.result_table.setRowCount(0)
+            self.result_table.setRowCount(len(result))
+            print(result)
+            for row, info in enumerate(result):
+                info_list = [
+                    info["product_id"],
+                    info["name"],
+                    info["category"],
+                    info["price"],
+                    info["rating"],
+                    info["qty"],
+                    info["description"],
+                    info["url"]
+                ]
+
+                for column,item in enumerate(info_list):
+                    cell_item = QTableWidgetItem(str(item))
+                    self.result_table.setItem(row, column, cell_item)
+        else:
+            self.result_table.setRowCount(0)
+            return 
+    
+    def update_info(self):
+        pass
+
+    def select_info(self):
+        pass
+
+    def clear_form_info(self):
+        pass
+
+
+
 
 
 class AdminOrdersPage(QMainWindow):
@@ -639,7 +812,6 @@ class Ui_ItemDetailsWindow(QtWidgets.QMainWindow):
         self.label_10.setText(_translate("MainWindow", "Receipent\'s name"))
         self.label_6.setText(_translate("MainWindow", "Phone No"))
         self.label_8.setText(_translate("MainWindow", "Address"))
-
 
 
 class Invoice_MainWindow(object):

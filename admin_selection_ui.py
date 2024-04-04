@@ -52,7 +52,7 @@ class SelectOption(object):
         self.product_btn.setIconSize(QtCore.QSize(14, 14))
         self.product_btn.setAutoExclusive(True)
         self.product_btn.setObjectName("product_btn")
-        self.product_btn.setVisible(False)
+        # self.product_btn.setVisible(False)
         self.verticalLayout.addWidget(self.product_btn)
         self.order_btn = QtWidgets.QPushButton(self.centralwidget)
         self.order_btn.setMouseTracking(True)

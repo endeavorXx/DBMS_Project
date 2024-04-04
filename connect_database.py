@@ -219,6 +219,63 @@ VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{
         finally:
             self.con.close()
     
+    def search_product_info_All(self, product_id = None, product_name = None, product_category = None, product_price = None, product_rating = None, product_qty = None, product_desc = None, image_url = None):
+        self.connect_db()
+
+        condition = ""
+
+        if product_id:
+            ## customer_id is an integer in our tables
+            condition += f"product_id = {product_id}"
+        else:
+            if product_name:
+                if condition:
+                    condition += f"and name LIKE '%{product_name}%'"
+                else:
+                    condition += f"name LIKE '%{product_name}%'"
+            if product_category:
+                if condition:
+                    condition += f"and category LIKE '%{product_category}%'"
+                else:
+                    condition += f"category LIKE '%{product_category}%'"
+            if product_price:
+                if condition:
+                    condition += f"and price = '{product_price}'"
+                else:
+                    condition += f"price = '{product_price}'"
+            if product_rating:
+                if condition:
+                    condition += f"and rating = '{product_rating}'"
+                else:
+                    condition += f"rating = '{product_rating}'"
+            if  product_qty:
+                if condition:
+                    condition += f"and qty = '{product_qty}'"
+                else:
+                    condition += f"qty = '{product_qty}'"
+            if product_desc:
+                if condition:
+                    condition += f"and description = '{product_desc}'"
+                else:
+                    condition += f"description = '{product_desc}'"
+
+            
+        if condition:
+            sql = f"""
+                select * from product where {condition};
+            """ 
+        else:
+            sql = f"""
+                select * from product;
+            """ 
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        finally:
+            self.con.close()
+    
     def get_all_product(self):
         self.connect_db()
 
@@ -234,6 +291,18 @@ VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{
 
             self.con.rollback()
             return E
+        finally:
+            self.con.close()
+    def add_product_info(self, name, category, price, rating, qty, description = None, url = None):
+        self.connect_db()
+
+        sql = f"""
+            INSERT INTO product (name, category, price, rating, qty, description, url)
+VALUES('{name}','{category}',{price},{rating},{qty},'{description}','{url}')
+        """
+        try:
+            self.cursor.execute(sql)
+            self.con.commit()
         finally:
             self.con.close()
     
