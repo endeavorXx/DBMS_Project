@@ -25,6 +25,8 @@ class SelectOption(object):
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName("verticalLayout")
+
+        # Dashboard Button
         self.dashboard_btn = QtWidgets.QPushButton(self.centralwidget)
         self.dashboard_btn.setMouseTracking(True)
         icon = QtGui.QIcon()
@@ -35,6 +37,8 @@ class SelectOption(object):
         self.dashboard_btn.setObjectName("dashboard_btn")
         self.dashboard_btn.setVisible(False)
         self.verticalLayout.addWidget(self.dashboard_btn)
+
+        # Customer Button
         self.customer_btn = QtWidgets.QPushButton(self.centralwidget)
         self.customer_btn.setMouseTracking(True)
         icon1 = QtGui.QIcon()
@@ -44,6 +48,8 @@ class SelectOption(object):
         self.customer_btn.setAutoRepeat(True)
         self.customer_btn.setObjectName("customer_btn")
         self.verticalLayout.addWidget(self.customer_btn)
+
+        # Product Button
         self.product_btn = QtWidgets.QPushButton(self.centralwidget)
         self.product_btn.setMouseTracking(True)
         icon2 = QtGui.QIcon()
@@ -54,6 +60,8 @@ class SelectOption(object):
         self.product_btn.setObjectName("product_btn")
         self.product_btn.setVisible(True)
         self.verticalLayout.addWidget(self.product_btn)
+
+        # Order Button
         self.order_btn = QtWidgets.QPushButton(self.centralwidget)
         self.order_btn.setMouseTracking(True)
         icon3 = QtGui.QIcon()
@@ -63,6 +71,8 @@ class SelectOption(object):
         self.order_btn.setAutoExclusive(True)
         self.order_btn.setObjectName("order_btn")
         self.verticalLayout.addWidget(self.order_btn)
+
+        # Supplies Button
         self.supplies_btn = QtWidgets.QPushButton(self.centralwidget)
         self.supplies_btn.setMouseTracking(True)
         icon4 = QtGui.QIcon()
@@ -73,6 +83,8 @@ class SelectOption(object):
         self.supplies_btn.setObjectName("supplies_btn")
         self.supplies_btn.setVisible(True)
         self.verticalLayout.addWidget(self.supplies_btn)
+
+        # Vendors Button
         self.vendors_btn = QtWidgets.QPushButton(self.centralwidget)
         self.vendors_btn.setMouseTracking(True)
         icon5 = QtGui.QIcon()
@@ -83,9 +95,13 @@ class SelectOption(object):
         self.vendors_btn.setObjectName("vendors_btn")
         self.vendors_btn.setVisible(True)
         self.verticalLayout.addWidget(self.vendors_btn)
+
+        # Spacer
         self.verticalLayout_2.addLayout(self.verticalLayout)
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_2.addItem(spacerItem)
+
+        # Exit Button
         self.exit_btn = QtWidgets.QPushButton(self.centralwidget)
         self.exit_btn.setMouseTracking(True)
         icon6 = QtGui.QIcon()
@@ -95,6 +111,8 @@ class SelectOption(object):
         self.exit_btn.setAutoExclusive(True)
         self.exit_btn.setObjectName("exit_btn")
         self.verticalLayout_2.addWidget(self.exit_btn)
+
+        # Final setup
         self.gridLayout.addLayout(self.verticalLayout_2, 0, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -105,7 +123,7 @@ class SelectOption(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.dashboard_btn.setText(_translate("MainWindow", "Dashboard"))
-        self.customer_btn.setText(_translate("MainWindow", "Customer "))
+        self.customer_btn.setText(_translate("MainWindow", "Customer"))
         self.product_btn.setText(_translate("MainWindow", "Product"))
         self.order_btn.setText(_translate("MainWindow", "Orders"))
         self.supplies_btn.setText(_translate("MainWindow", "Supplies"))
