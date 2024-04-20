@@ -4,14 +4,64 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon, QIntValidator
 from PyQt5.QtMultimedia import QSound
-from admin_login import Ui_MainWindow
+from admin_customer import Ui_MainWindow
 from login_ui import LoginMainWindow
 from signup import SignUpMainWindow
+from admin_selection_ui import SelectOption
+from admin_order import AdminOrderWindow
+from admin_product import AdminProductWindow
+from admin_vendor import AdminVendorWindow
+from admin_supply import AdminSupplyWindow
 from connect_database import connectDatabase
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtMultimedia import QSound
 import hashlib
 import datetime
+
+class LoginWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.myLoginWindow = QtWidgets.QMainWindow()
+        self.loginui = LoginMainWindow()
+        self.loginui.setupUi(self.myLoginWindow)
+        self.myLoginWindow.show()   
+        self.db = connectDatabase()
+        self.loginui.login_button.clicked.connect(self.login)
+        self.loginui.signup_button.clicked.connect(self.open_signup_window)
+        
+    def login(self):
+
+        self.username = self.loginui.username_lineEdit.text()
+        self.password = self.loginui.password_lineEdit.text()
+
+        # Perform authentication, e.g., check against a database
+        print(self.username)
+        if (self.username.strip() == 'a') and (self.password.strip() == 'a'):
+            print("Login successful")
+            self.close()
+            self.adminlogin = AdminHomePage()
+
+        else:
+            self.authenticate_customer(self.username,self.password)
+            print("Welcome Customer")
+    
+    def authenticate_customer(self,phone,pswd):
+        customer_auth = self.db.get_customer_authentication(phone,pswd)
+
+        if customer_auth:
+            self.close()
+            self.myCustomer = self.db.search_customer_info(None, None, None, self.username)
+            self.MainWindow2 = QtWidgets.QMainWindow()
+            self.home_window = HomePage(self.myCustomer)          
+            self.home_window.setupUi(self.MainWindow2)
+            self.MainWindow2.show()
+        else:
+            ## we can use a pop_up window or something
+            print("Wrong credentials!!")
+
+    def open_signup_window(self):
+        self.close()
+        signup_window.setupUi()
 
 class SignupWindow(QMainWindow):
     def __init__(self):
@@ -48,81 +98,93 @@ class SignupWindow(QMainWindow):
                 QMessageBox.information(self, "Registration", f"Registration successful", QMessageBox.StandardButton.Ok)
                 self.mySignUpWindow.close()
 
-class LoginWindow(QMainWindow):
+
+class AdminHomePage(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.myLoginWindow = QtWidgets.QMainWindow()
-        self.loginui = LoginMainWindow()
-        self.loginui.setupUi(self.myLoginWindow)
-        self.myLoginWindow.show()   
-        self.db = connectDatabase()
-        self.loginui.login_button.clicked.connect(self.login)
-        self.loginui.signup_button.clicked.connect(self.open_signup_window)
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminchoice = SelectOption()
+        self.adminchoice.setupUi(self.MainWindow)
+        self.MainWindow.show()
+
+        self.dashboard_btn = self.adminchoice.dashboard_btn
+        self.customer_btn = self.adminchoice.customer_btn
+        self.product_btn = self.adminchoice.product_btn
+        self.supplies_btn = self.adminchoice.supplies_btn
+        self.exit_btn = self.adminchoice.exit_btn
+        self.vendors_btn = self.adminchoice.vendors_btn
+        self.orders_btn = self.adminchoice.order_btn
+        self.init_signal_slot()
+
+    def init_signal_slot(self):
+        # self.dashboard_btn.clicked.connect(self.showDashboard)
+        self.customer_btn.clicked.connect(self.showCustomer)
+        self.product_btn.clicked.connect(self.showProducts)        
+        self.orders_btn.clicked.connect(self.showOrders)  
+        self.vendors_btn.clicked.connect(self.showVendors)  
+        self.supplies_btn.clicked.connect(self.showSupplies)  
+        self.exit_btn.clicked.connect(self.getExit)  
+
+    # def showDashboard(self):
         
-    def login(self):
+    def showCustomer(self):
+        self.adminlogin = AdminCustomerPage()
+    def showProducts(self):
+        self.adminlogin = AdminProductPage()
 
-        self.username = self.loginui.username_lineEdit.text()
-        self.password = self.loginui.password_lineEdit.text()
+    def showOrders(self):
+        self.adminlogin = AdminOrdersPage()
 
-        # Perform authentication, e.g., check against a database
-        print(self.username)
-        if (self.username.strip() == 'admin') and (self.password.strip() == 'admin123'):
-            print("Login successful")
-            self.close()
-            self.MainWindow = QtWidgets.QMainWindow()
-            self.adminui = Ui_MainWindow()
-            self.adminui.setupUi(self.MainWindow)
-            self.MainWindow.show()
+    def showVendors(self):
+        self.adminlogin = AdminVendorPage()
 
-            self.customer_id = self.adminui.lineEdit
-            # This will validate that input number is int
-            self.customer_id.setValidator(QIntValidator())
+    def showSupplies(self):
+        self.adminlogin = AdminSupplyPage()
 
-            self.first_name = self.adminui.lineEdit_2
-            self.last_name = self.adminui.lineEdit_3
-            self.phone_no = self.adminui.lineEdit_4
-            self.phone_no.setValidator(QIntValidator())
-            self.street = self.adminui.lineEdit_5
-            self.city = self.adminui.lineEdit_6
-            self.state = self.adminui.lineEdit_7
-            self.pin_code = self.adminui.lineEdit_8
-            self.pin_code.setValidator(QIntValidator())
+    def getExit(self):
+        self.MainWindow.close()
 
-            self.add_btn = self.adminui.addButton
-            self.update_btn = self.adminui.updateButton
-            self.select_btn = self.adminui.selectButton
-            self.search_btn = self.adminui.searchButton
-            self.clear_btn = self.adminui.clearButton
 
-            self.result_table = self.adminui.tableWidget
-            self.result_table.setSortingEnabled(False)
-            self.buttons_list = self.adminui.function_frame.findChildren(QPushButton)
-            # Initialize signal slot connection
+class AdminCustomerPage(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.db = connectDatabase()
 
-            self.init_signal_slot()
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminui = Ui_MainWindow()
+        self.adminui.setupUi(self.MainWindow)
+        self.MainWindow.show()
 
-            #populate initial data in the table and state/city dropdowns
-            self.search_info()
+        self.customer_id = self.adminui.lineEdit
+        # This will validate that input number is int
+        self.customer_id.setValidator(QIntValidator())
 
-        else:
-            self.authenticate_customer(self.username,self.password)
-            print("Welcome Customer")
+        self.first_name = self.adminui.lineEdit_2
+        self.last_name = self.adminui.lineEdit_3
+        self.phone_no = self.adminui.lineEdit_4
+        self.phone_no.setValidator(QIntValidator())
+        self.street = self.adminui.lineEdit_5
+        self.city = self.adminui.lineEdit_6
+        self.state = self.adminui.lineEdit_7
+        self.pin_code = self.adminui.lineEdit_8
+        self.pin_code.setValidator(QIntValidator())
+
+        self.add_btn = self.adminui.addButton
+        self.update_btn = self.adminui.updateButton
+        self.select_btn = self.adminui.selectButton
+        self.search_btn = self.adminui.searchButton
+        self.clear_btn = self.adminui.clearButton
+
+        self.result_table = self.adminui.tableWidget
+        self.result_table.setSortingEnabled(False)
+        self.buttons_list = self.adminui.function_frame.findChildren(QPushButton)
+        # Initialize signal slot connection
+
+        self.init_signal_slot()
+
+        #populate initial data in the table and state/city dropdowns
+        self.search_info()
     
-    def authenticate_customer(self,phone,pswd):
-        customer_auth = self.db.get_customer_authentication(phone,pswd)
-
-        if customer_auth:
-            self.close()
-            self.myCustomer = self.db.search_customer_info(None, None, None, self.username)
-            self.MainWindow2 = QtWidgets.QMainWindow()
-            self.home_window = HomePage(self.myCustomer)          
-            self.home_window.setupUi(self.MainWindow2)
-            self.MainWindow2.show()
-        else:
-            ## we can use a pop_up window or something
-            print("Wrong credentials!!")
-
-
     ## To Intialize button with signals
             
     def init_signal_slot(self):
@@ -313,13 +375,768 @@ class LoginWindow(QMainWindow):
         for button in self.buttons_list:
             button.setDisabled(False)
 
-    def open_signup_window(self):
-        self.close()
-        signup_window.setupUi()
+
+class AdminProductPage(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.db = connectDatabase()
+
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminproduct = AdminProductWindow()
+        self.adminproduct.setupUi(self.MainWindow)
+        self.MainWindow.show()
+
+        self.product_id = self.adminproduct.lineEdit
+
+        self.name = self.adminproduct.lineEdit_2
+        self.category = self.adminproduct.lineEdit_3
+        self.price = self.adminproduct.lineEdit_4
+        self.rating = self.adminproduct.lineEdit_6
+        self.qty = self.adminproduct.lineEdit_5
+        self.description = self.adminproduct.lineEdit_7
+        self.url = ""
+
+        self.add_btn = self.adminproduct.addButton
+        self.update_btn = self.adminproduct.updateButton
+        self.select_btn = self.adminproduct.selectButton
+        self.search_btn = self.adminproduct.searchButton
+        self.clear_btn = self.adminproduct.clearButton
+        self.img_btn = self.adminproduct.imgButton
+
+        self.result_table = self.adminproduct.tableWidget
+        self.result_table.setSortingEnabled(False)
+        self.buttons_list = self.adminproduct.function_frame.findChildren(QPushButton)
+        # Initialize signal slot connection
+
+        self.init_signal_slot()
+
+        #populate initial data in the table and state/city dropdowns
+        self.search_info()
+    
+    ## To Intialize button with signals
+            
+    def init_signal_slot(self):
+        # Connect button to their respective functions
+        self.add_btn.clicked.connect(self.add_new_product_info)
+        self.search_btn.clicked.connect(self.search_info)
+        self.update_btn.clicked.connect(self.update_info)        
+        self.select_btn.clicked.connect(self.select_info)  
+        self.clear_btn.clicked.connect(self.clear_form_info)
+        self.img_btn.clicked.connect(self.open_file_dialog)
+
+    def open_file_dialog(self):
+        file_dialog = QFileDialog()
+        file_dialog.setFileMode(QFileDialog.ExistingFiles)
+        if file_dialog.exec_():
+            selected_files = file_dialog.selectedFiles()
+            print("Selected Files:", selected_files) 
+            self.url = selected_files[0]
+
+    def add_new_product_info(self):
+        product_info = self.get_product_info()
+        self.product_id.setEnabled(False)
+
+        print(product_info)
+        if product_info["product_id"]:
+            QMessageBox.information(self, "Alert", f"Product Id is automatically generated", QMessageBox.StandardButton.Ok)
+        
+        if product_info["name"] == "" or product_info["category"] == "" or product_info["price"] == "" or product_info["rating"] == "" or product_info["qty"]=="" :
+             ## Alert that some input fields are missing
+            QMessageBox.information(self, "Missing Information", f"Please fill all fields", QMessageBox.StandardButton.Ok)
+        else:
+            product_info["rating"] = int(product_info["rating"])
+            product_info["price"] = float(product_info["price"])
+            product_info["qty"] = int(product_info["qty"])
+            print(product_info)
+            add_result = self.db.add_product_info(
+                name = product_info["name"],
+                category = product_info["category"],
+                price = product_info["price"],
+                rating = product_info["rating"],
+                qty = product_info["qty"],
+                description = product_info["description"],
+                url = product_info["url"],
+            )
+
+        self.enable_buttons()
+        self.product_id.setEnabled(True)
+        self.search_info()
+
+    def get_product_info(self):
+        product_id = self.product_id.text().strip()
+        name = self.name.text().strip()
+        category = self.category.text().strip()
+        price = self.price.text().strip()
+        rating = self.rating.text().strip()
+        qty = self.qty.text().strip()
+        description = self.description.text().strip()
+        url = self.url.strip()
 
 
-class Ui_ItemDetailsWindow(object):
+        ## add pincode information later when table in database is changed with extra column for pin code
+        product_info = {
+            "product_id": product_id,
+            "name": name,
+            "category" : category,
+            "price" : price,
+            "rating" : rating,
+            "qty" : qty,
+            "description" : description,
+            "url" : url
+        } 
+        # print(product_info)
+        return product_info
+    
+    def search_info(self):
+        product_info = self.get_product_info()
+        print(product_info)
+
+        product_result = self.db.search_product_info_All(
+            product_id = product_info["product_id"],
+            product_name = product_info["name"],
+            product_category = product_info["category"],
+            product_price = product_info["price"],
+            product_rating = product_info["rating"],
+            product_qty = product_info["qty"],
+            product_desc = product_info["description"],
+            image_url = product_info["url"],
+        )
+
+        print(product_result)
+        self.show_data(product_result)
+
+    def show_data(self, result):
+        if result:
+            self.result_table.setRowCount(0)
+            self.result_table.setRowCount(len(result))
+            print(result)
+            for row, info in enumerate(result):
+                info_list = [
+                    info["product_id"],
+                    info["name"],
+                    info["category"],
+                    info["price"],
+                    info["rating"],
+                    info["qty"],
+                    info["description"],
+                    info["url"]
+                ]
+
+                for column,item in enumerate(info_list):
+                    cell_item = QTableWidgetItem(str(item))
+                    self.result_table.setItem(row, column, cell_item)
+        else:
+            self.result_table.setRowCount(0)
+            return 
+    
+    def update_info(self):
+        new_product_info = self.get_product_info()
+        # print(new_customer_info)
+
+        if new_product_info["product_id"]:
+            update_result = self.db.update_product_info(
+                product_id= new_product_info["product_id"],
+                name = new_product_info["name"],
+                category = new_product_info["category"],
+                price = new_product_info["price"],
+                rating = new_product_info["rating"],
+                qty = new_product_info["qty"],
+                description = new_product_info["description"],
+                url = new_product_info["url"]
+            )
+
+            if update_result:
+                QMessageBox.information(self, "Warning", f"Failed to update information: {update_result}, please try again", QMessageBox.StandardButton.Ok)
+            else:
+                self.search_info()
+        else:
+            QMessageBox.information(self, "Warning", "Please select one student information to update")
+
+    def select_info(self):
+        select_row = self.result_table.currentRow()
+        if select_row!=-1:
+            self.product_id.setEnabled(False)
+            product_id = self.result_table.item(select_row, 0).text().strip()
+            name = self.result_table.item(select_row, 1).text().strip()
+            category = self.result_table.item(select_row, 2).text().strip()
+            price =  self.result_table.item(select_row, 3).text().strip()
+            rating =  self.result_table.item(select_row, 4).text().strip()
+            qty =  self.result_table.item(select_row, 5).text().strip()
+            desc =  self.result_table.item(select_row, 6).text().strip()
+            url =  self.result_table.item(select_row, 7).text().strip()
+
+            self. product_id.setText(product_id)
+            self.name.setText(name)
+            self.category.setText(category)
+            self.price.setText(price)
+            self.rating.setText(rating)
+            self.qty.setText(qty)
+            self.description.setText(desc)
+        else:
+            QMessageBox.information(self, "Warning", "Please select one student information", QMessageBox.StandardButton.Ok)
+
+    def enable_buttons(self):
+        for button in self.buttons_list:
+            button.setDisabled(False)
+    
+    def disable_buttons(self):
+        for button in self.buttons_list:
+            button.setDisabled(True)
+
+    def clear_form_info(self):
+
+        self.product_id.clear()
+        self.product_id.setEnabled(True)
+        self.name.clear()
+        self.category.clear()
+        self.price.clear()
+        self.rating.clear()
+        self.qty.clear()
+        self.description.clear()
+        self.search_info()
+
+class AdminOrdersPage(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.db = connectDatabase()
+
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminorder = AdminOrderWindow()
+        self.adminorder.setupUi(self.MainWindow)
+        self.MainWindow.show()
+        self.order_id = self.adminorder.lineEdit
+        self.transaction_id = self.adminorder.lineEdit_2
+        self.customer_id = self.adminorder.lineEdit_3
+
+        self.search_btn = self.adminorder.searchButton
+        self.clear_btn = self.adminorder.clearButton
+
+        self.result_table = self.adminorder.tableWidget
+        self.result_table.setSortingEnabled(False)
+
+        self.init_signal_slot()
+        self.search_info()
+
+    def init_signal_slot(self):
+        self.search_btn.clicked.connect(self.search_info)
+        self.clear_btn.clicked.connect(self.clearForm)
+
+    def get_order_info(self):
+        #Function to retrive data from the form
+        customer_id = self.customer_id.text().strip()
+        order_id = self.order_id.text().strip()
+        transaction_id = self.transaction_id.text().strip()
+
+        order_info = {
+            "customer_id" : customer_id,
+            "order_id" : order_id,
+            "transaction_id" : transaction_id
+        }
+        return order_info
+    
+    def search_info(self):
+
+        order_info = self.get_order_info()
+
+        order_result = self.db.search_order_info(
+            order_id = order_info["order_id"],
+            customer_id = order_info["customer_id"],
+            transaction_id=order_info["transaction_id"]
+        )
+        self.show_data(order_result)
+
+    def show_data(self,result):
+        if result:
+            self.result_table.setRowCount(0)
+            self.result_table.setRowCount(len(result))
+            for row, info in enumerate(result):
+                info_list = [
+                    info["order_id"],
+                    info["customer_id"],
+                    info["payment_method"],
+                    info["amount"],
+                    info["transaction_id"],
+                    info["order_date"],
+                    info["order_time"],
+                    info["delivery_date"],
+                    info["delivery_status"]
+                ]
+
+                for column,item in enumerate(info_list):
+                    cell_item = QTableWidgetItem(str(item))
+                    self.result_table.setItem(row, column, cell_item)
+        else:
+            self.result_table.setRowCount(0)
+            return 
+
+    def clearForm(self):
+        self.customer_id.clear()
+        self.transaction_id.clear()
+        self.transaction_id.clear()
+        self.search_info()
+
+class AdminVendorPage(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.db = connectDatabase()
+
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminvendor = AdminVendorWindow()
+        self.adminvendor.setupUi(self.MainWindow)
+        self.MainWindow.show()
+
+        self.vendor_id = self.adminvendor.lineEdit
+        # This will validate that input number is int
+        self.vendor_id.setValidator(QIntValidator())
+
+        self.vendor_name = self.adminvendor.lineEdit_2
+        self.street = self.adminvendor.lineEdit_3
+        self.city = self.adminvendor.lineEdit_4
+        self.state = self.adminvendor.lineEdit_5
+        self.phone_no = self.adminvendor.lineEdit_6
+        self.phone_no.setValidator(QIntValidator())
+
+        self.add_btn = self.adminvendor.addButton
+        self.update_btn = self.adminvendor.updateButton
+        self.select_btn = self.adminvendor.selectButton
+        self.search_btn = self.adminvendor.searchButton
+        self.clear_btn = self.adminvendor.clearButton
+
+        self.result_table = self.adminvendor.tableWidget
+        self.result_table.setSortingEnabled(False)
+        self.buttons_list = self.adminvendor.function_frame.findChildren(QPushButton)
+        # Initialize signal slot connection
+
+        self.init_signal_slot()
+
+        #populate initial data in the table and state/city dropdowns
+        self.search_info()
+    
+    ## To Intialize button with signals
+            
+    def init_signal_slot(self):
+        # Connect button to their respective functions
+        self.add_btn.clicked.connect(self.add_new_vendor_info)
+        self.search_btn.clicked.connect(self.search_info)
+        self.update_btn.clicked.connect(self.update_info)        
+        self.select_btn.clicked.connect(self.select_info)  
+        self.clear_btn.clicked.connect(self.clear_form_info)            
+
+
+    ## For ADMIN ANALYSIS OF CUSTOMERS
+
+
+    def search_info(self):
+        # function for searching and populate the student data
+        # self.update_street_city_state()
+        vendor_info = self.get_vendor_info()
+        print(vendor_info)
+
+        vendor_result = self.db.search_vendor_info(
+            vendor_id = vendor_info["vendor_id"],
+            vendor_name = vendor_info["vendor_name"],
+            street = vendor_info["street"],
+            city = vendor_info["city"],
+            state = vendor_info["state"],
+            phone_no = vendor_info["phone_no"],
+        )
+
+        print(vendor_result)
+        self.show_data(vendor_result)
+    
+    def get_vendor_info(self):
+        #Function to retrive data from the form
+        vendor_id = self.vendor_id.text().strip()
+        vendor_name = self.vendor_name.text().strip()
+        street = self.street.text().strip()
+        city = self.city.text().strip()
+        state = self.state.text().strip()
+        phone_no = self.phone_no.text().strip()
+
+        ## add pincode information later when table in database is changed with extra column for pin code
+        vendor_info = {
+            "vendor_id": vendor_id,
+            "vendor_name": vendor_name,
+            "street" : street,
+            "city" : city,
+            "state" : state,
+            "phone_no" : phone_no
+        } 
+        print(vendor_info)
+        return vendor_info
+    
+    def show_data(self, result):
+        # Function to populate the table with student information
+        if result:
+            self.result_table.setRowCount(0)
+            self.result_table.setRowCount(len(result))
+            print(result)
+            for row, info in enumerate(result):
+                info_list = [
+                    info["vendor_id"],
+                    info["vendor_name"],
+                    info["street"],
+                    info["city"],
+                    info["state"],
+                    info["phone_no"]
+                ]
+
+                for column,item in enumerate(info_list):
+                    cell_item = QTableWidgetItem(str(item))
+                    self.result_table.setItem(row, column, cell_item)
+        else:
+            self.result_table.setRowCount(0)
+            return 
+
+    def add_new_vendor_info(self):
+        # self.disable_buttons()
+        vendor_info = self.get_vendor_info()
+        self.vendor_id.setEnabled(False)
+
+        print(vendor_info)
+        if vendor_info["vendor_id"]:
+            QMessageBox.information(self, "Alert", f"Customer Id is automatically generated", QMessageBox.StandardButton.Ok)
+        if vendor_info["vendor_name"] == "" or  vendor_info["phone_no"] == "" or vendor_info["street"] == "" or vendor_info["city"]=="" or vendor_info["state"]=="":
+             ## Alert that some input fields are missing
+            QMessageBox.information(self, "Missing Information", f"Please fill all fields", QMessageBox.StandardButton.Ok)
+        else:
+            add_result = self.db.add_vendor_info(
+                vendor_name = vendor_info["vendor_name"],
+                street = vendor_info["street"],
+                city = vendor_info["city"],
+                state = vendor_info["state"],
+                phone_no = vendor_info["phone_no"]
+            )
+
+        self.enable_buttons()
+        self.vendor_id.setEnabled(False)
+        self.search_info()
+
+    def update_info(self):
+        new_vendor_info = self.get_vendor_info()
+        # print(new_customer_info)
+
+        if new_vendor_info["vendor_id"]:
+            update_result = self.db.update_vendor_info(
+                vendor_id= new_vendor_info["vendor_id"],
+                vendor_name = new_vendor_info["vendor_name"],
+                street = new_vendor_info["street"],
+                city = new_vendor_info["city"],
+                state = new_vendor_info["state"],
+                phone_no = new_vendor_info["phone_no"]
+            )
+
+            if update_result:
+                QMessageBox.information(self, "Warning", f"Failed to update information: {update_result}, please try again", QMessageBox.StandardButton.Ok)
+            else:
+                self.search_info()
+        else:
+            QMessageBox.information(self, "Warning", "Please select one student information to update")
+
+    def select_info(self):
+        
+        select_row = self.result_table.currentRow()
+        if select_row!=-1:
+            self.vendor_id.setEnabled(False)
+            vendor_id = self.result_table.item(select_row, 0).text().strip()
+            vendor_name = self.result_table.item(select_row, 1).text().strip()
+            street =  self.result_table.item(select_row, 2).text().strip()
+            city =  self.result_table.item(select_row, 3).text().strip()
+            state = self.result_table.item(select_row, 4).text().strip()
+            phone_no =  self.result_table.item(select_row, 5).text().strip()
+
+            self.vendor_id.setText(vendor_id)
+            self.vendor_name.setText(vendor_name)
+            self.phone_no.setText(phone_no)
+            self.street.setText(street)
+            self.city.setText(city)
+            self.state.setText(state)
+        else:
+            QMessageBox.information(self, "Warning", "Please select one student information", QMessageBox.StandardButton.Ok)
+
+    
+    def check_customer_id(self, customer_id):
+
+        result = self.db.search_info(customer_id = customer_id)
+        return result
+    
+    def clear_form_info(self):
+        self.vendor_id.clear()
+        self.vendor_id.setEnabled(True)
+        self.vendor_name.clear()
+        self.phone_no.clear()
+        self.street.clear()
+        self.city.clear()
+        self.state.clear()
+        self.search_info()
+    
+    def disable_buttons(self):
+        for button in self.buttons_list:
+            button.setDisabled(True)
+
+    def enable_buttons(self):
+        for button in self.buttons_list:
+            button.setDisabled(False)
+
+class AdminSupplyPage(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.db = connectDatabase()
+
+        self.MainWindow = QtWidgets.QMainWindow()
+        self.adminsupply = AdminSupplyWindow()
+        self.adminsupply.setupUi(self.MainWindow)
+        self.MainWindow.show()
+
+        self.supply_id = self.adminsupply.lineEdit
+        # This will validate that input number is int
+        self.supply_id.setValidator(QIntValidator())
+
+        self.vendor_id = self.adminsupply.lineEdit_2
+        self.vendor_id.setValidator(QIntValidator())
+
+        self.product_id = self.adminsupply.lineEdit_3
+        self.product_id.setValidator(QIntValidator())
+
+        self.qty_supplied = self.adminsupply.lineEdit_4
+        self.qty_supplied.setValidator(QIntValidator())
+
+        self.date = self.adminsupply.lineEdit_5
+        self.time = self.adminsupply.lineEdit_6
+        self.cost_per_piece = self.adminsupply.lineEdit_7
+        self.cost_per_piece.setValidator(QIntValidator())
+        self.total_cost = self.adminsupply.lineEdit_8
+        self.total_cost.setValidator(QIntValidator())
+        self.margin_percentage = self.adminsupply.lineEdit_9
+        self.margin_percentage.setValidator(QIntValidator())
+        
+
+        self.add_btn = self.adminsupply.addButton
+        self.delete_btn = self.adminsupply.deleteButton
+        self.select_btn = self.adminsupply.selectButton
+        self.search_btn = self.adminsupply.searchButton
+        self.clear_btn = self.adminsupply.clearButton
+
+        self.result_table = self.adminsupply.tableWidget
+        self.result_table.setSortingEnabled(False)
+        self.buttons_list = self.adminsupply.function_frame.findChildren(QPushButton)
+        # Initialize signal slot connection
+
+        self.init_signal_slot()
+
+        #populate initial data in the table and state/city dropdowns
+        self.search_info()
+    
+    ## To Intialize button with signals
+            
+    def init_signal_slot(self):
+        # Connect button to their respective functions
+        self.add_btn.clicked.connect(self.add_new_supply_info)
+        self.search_btn.clicked.connect(self.search_info)
+        self.select_btn.clicked.connect(self.select_info)
+        self.delete_btn.clicked.connect(self.delete_info)         
+        self.clear_btn.clicked.connect(self.clear_form_info)            
+
+
+    ## For ADMIN ANALYSIS OF CUSTOMERS
+
+
+    def search_info(self):
+        # function for searching and populate the student data
+        # self.update_street_city_state()
+        supply_info = self.get_supply_info()
+        print(supply_info)
+
+        supply_result = self.db.search_supply_info(
+            supply_id = supply_info["supply_id"],
+            vendor_id = supply_info["vendor_id"],
+            product_id = supply_info["product_id"],
+            date = supply_info["date"]
+        )
+
+        print(supply_result)
+        self.show_data(supply_result)
+
+    def select_info(self):
+        
+        select_row = self.result_table.currentRow()
+        if select_row!=-1:
+            self.supply_id.setEnabled(False)
+            supply_id = self.result_table.item(select_row, 0).text().strip()
+            vendor_id = self.result_table.item(select_row, 1).text().strip()
+            product_id = self.result_table.item(select_row, 2).text().strip()
+            qty_supplied = self.result_table.item(select_row, 3).text().strip()
+            date =  self.result_table.item(select_row, 4).text().strip()
+            time =  self.result_table.item(select_row, 5).text().strip()
+            cost_per_piece =  self.result_table.item(select_row, 6).text().strip()
+            total_cost =  self.result_table.item(select_row, 7).text().strip()
+            margin_percentage =  self.result_table.item(select_row, 8).text().strip()
+
+            self.supply_id.setText(supply_id)
+            self.vendor_id.setText(vendor_id)
+            self.product_id.setText(product_id)
+            self.qty_supplied.setText(qty_supplied)
+            self.date.setText(date)
+            self.time.setText(time)
+            self.cost_per_piece.setText(cost_per_piece)
+            self.total_cost.setText(total_cost)
+            self.margin_percentage.setText(margin_percentage)
+        else:
+            QMessageBox.information(self, "Warning", "Please select one student information", QMessageBox.StandardButton.Ok)
+    
+    def get_supply_info(self):
+        #Function to retrive data from the form
+        # print(supply_info)
+        supply_id = self.supply_id.text().strip()
+        vendor_id = self.vendor_id.text().strip()
+        product_id = self.product_id.text().strip()
+        qty_supplied = self.qty_supplied.text().strip()
+        date = self.date.text().strip()
+        time = self.time.text().strip()
+        cost_per_piece = self.cost_per_piece.text().strip()
+        total_cost = self.total_cost.text().strip()
+        margin_percentage = self.margin_percentage.text().strip()
+
+
+        ## add pincode information later when table in database is changed with extra column for pin code
+        if supply_id.isdigit():
+            supply_id = int(supply_id)
+        if vendor_id.isdigit():
+            vendor_id = int(vendor_id)
+        if product_id.isdigit():
+            product_id = int(product_id)
+        if qty_supplied.isdigit():
+            qty_supplied = int(qty_supplied)
+        if cost_per_piece != "":
+            cost_per_piece = float(cost_per_piece)
+        if total_cost != "":
+            total_cost = float(total_cost)
+        if margin_percentage != "":
+            margin_percentage = float(margin_percentage)
+
+        supply_data = {
+            "supply_id": supply_id,
+            "vendor_id": vendor_id,
+            "product_id" : product_id,
+            "qty_supplied" : qty_supplied ,
+            "date" : date,
+            "time" : time,
+            "cost_per_piece" : cost_per_piece,
+            "total_cost" : total_cost,
+            "margin_percentage" : margin_percentage
+        } 
+        print(supply_data)
+        return supply_data
+    
+    def show_data(self, result):
+        # Function to populate the table with student information
+        if result:
+            self.result_table.setRowCount(0)
+            self.result_table.setRowCount(len(result))
+            print(result)
+            for row, info in enumerate(result):
+                info_list = [
+                    info["supply_id"],
+                    info["vendor_id"],
+                    info["product_id"],
+                    info["qty_supplied"],
+                    info["date"],
+                    info["time"],
+                    info["cost_per_piece"],
+                    info["total_cost"],
+                    info["margin_percentage"]
+                ]
+
+                for column,item in enumerate(info_list):
+                    cell_item = QTableWidgetItem(str(item))
+                    self.result_table.setItem(row, column, cell_item)
+        else:
+            self.result_table.setRowCount(0)
+            return 
+
+    def delete_info(self):
+        supply_info = self.get_supply_info()
+        # print(supply_info)
+        if supply_info["supply_id"]:
+            delete_result = self.db.delete_supply_info(
+                supply_id = supply_info["supply_id"]
+            )
+            QMessageBox.information(self, "Info", f"Item successfully deleted !!", QMessageBox.StandardButton.Ok)
+        else:
+            QMessageBox.information(self, "Alert", f"Please select one supply", QMessageBox.StandardButton.Ok)
+        
+        self.supply_id.setEnabled(True)
+        self.clear_form_info()
+        self.search_info()
+
+
+    def checkDetails(self, supply_info):
+        vendor_details = self.db.search_vendor_info()
+        vendor_id = supply_info["vendor_id"]
+        product_id = supply_info["product_id"]
+        product_details = self.db.get_all_product()
+        flag1,flag2 = 0,0
+        for i in vendor_details:
+            if vendor_id == i["vendor_id"]:
+                flag1 = 1
+        for i in product_details:
+            if product_id == i["product_id"]:
+                flag2 = 1
+        return flag1 and flag2
+    
+    def add_new_supply_info(self):
+        self.disable_buttons()
+        supply_info = self.get_supply_info()
+
+        self.supply_id.setEnabled(False)
+        flag = self.checkDetails(supply_info)
+        print(supply_info)
+        if supply_info["supply_id"]:
+            QMessageBox.information(self, "Alert", f"Supply Id is automatically generated", QMessageBox.StandardButton.Ok)
+        if supply_info["vendor_id"] == "" or supply_info["product_id"] == "" or supply_info["qty_supplied"] == "" or supply_info["cost_per_piece"] == "" or supply_info["margin_percentage"]=="" :
+             ## Alert that some input fields are missing
+            QMessageBox.information(self, "Missing Information", f"Please fill all mandatory fields", QMessageBox.StandardButton.Ok)
+        elif flag:
+            add_result = self.db.add_supply_info(
+                vendor_id = supply_info["vendor_id"],
+                product_id = supply_info["product_id"],
+                qty_supplied = supply_info["qty_supplied"],
+                date = datetime.date.today(),    ## fill in current date
+                time = datetime.datetime.now(), ## fill in current  time
+                cost_per_piece = supply_info["cost_per_piece"],
+                total_cost =  supply_info["cost_per_piece"]*supply_info["qty_supplied"],
+                margin_percentage = supply_info["margin_percentage"]
+            )
+        else:
+            QMessageBox.information(self, "Missing Information", f"wrong details", QMessageBox.StandardButton.Ok)
+        self.enable_buttons()
+        self.supply_id.setEnabled(True)
+        self.search_info()
+    
+    def clear_form_info(self):
+        self.supply_id.clear()
+        self.supply_id.setEnabled(True)
+        self.vendor_id.clear()
+        self.product_id.clear()
+        self.qty_supplied.clear()
+        self.date.clear()
+        self.time.clear()
+        self.cost_per_piece.clear()
+        self.total_cost.clear()
+        self.margin_percentage.clear()
+        self.search_info()
+    
+    def disable_buttons(self):
+        for button in self.buttons_list:
+            button.setDisabled(True)
+
+    def enable_buttons(self):
+        for button in self.buttons_list:
+            button.setDisabled(False)
+
+class Ui_ItemDetailsWindow(QtWidgets.QMainWindow):
     def __init__(self, pd_id, customer_details):
+        super().__init__()
         self.db = connectDatabase()
         self.product_id = pd_id
         ## customer_details is a list of dictionaries which is returned by sql when self.con.cursor(dictionary = True)
@@ -465,13 +1282,23 @@ class Ui_ItemDetailsWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def order_product(self, MainWindow, comboText, customer_details, p_id, qty, price, total):
-        MainWindow.close()
-        self.invoice_details_window = QtWidgets.QMainWindow()
-        self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
-        self.ui.setupUi(self.invoice_details_window)
+        total_quantity = 0
+        for i in qty:
+            total_quantity+=i
+        if total_quantity > 0:
+            MainWindow.close()
+            self.invoice_details_window = QtWidgets.QMainWindow()
+            self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
+            self.ui.setupUi(self.invoice_details_window)
 
-        # self.ui.label.setText(f"Item Details for {item_name}")
-        self.invoice_details_window.show()
+            # self.ui.label.setText(f"Item Details for {item_name}")
+            self.invoice_details_window.show()
+        else:
+            self.close()
+            self.show_notification()
+    def show_notification(self):
+        dialog = PopupDialog("Cart is Empty !!", 'red_cross.jpg', self)
+        dialog.exec_()   
 
 
     def calculate_total(self):
@@ -493,7 +1320,6 @@ class Ui_ItemDetailsWindow(object):
         self.label_10.setText(_translate("MainWindow", "Receipent\'s name"))
         self.label_6.setText(_translate("MainWindow", "Phone No"))
         self.label_8.setText(_translate("MainWindow", "Address"))
-
 
 
 class Invoice_MainWindow(object):
@@ -524,7 +1350,7 @@ class Invoice_MainWindow(object):
         print(self.order_time)
         print(self.delivery_date)
         self.db.add_order(self.myCustomer["customer_id"], self.paymentMethod, self.total, self.transaction_id, str(self.order_date), str(self.order_time), str(self.delivery_date), "Pending")
-        order_details = self.db.search_order_info(self.transaction_id)
+        order_details = self.db.search_order_info(transaction_id = self.transaction_id)
         print(order_details)
         self.order_id = order_details[0]["order_id"]
 
@@ -899,19 +1725,46 @@ class CartPage(QtWidgets.QMainWindow):
 
     def order_product(self, MainWindow, comboText, customer_details, p_id, qty, price, total):
         MainWindow.close()
+        total_quantity = 0
+        lst = self.db.get_all_product()
+        flag = 0
+        fault_id = -1
+        fault_stock = -1
+        for i in range(len(p_id)):
+            pd = p_id[i]
+            q = qty[i]
+            for dic in lst:
+                if (dic["product_id"] == pd):
+                    if (dic["qty"]<q):
+                        flag = 1
+                        fault_name = dic["name"]
+                        fault_stock = dic["qty"]
+                        total_quantity += q
+                        break
+                    else:
+                        total_quantity += q
+            if flag == 1:
+                break
+        
         if p_id:
-            self.invoice_details_window = QtWidgets.QMainWindow()
-            self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
-            self.ui.setupUi(self.invoice_details_window)
+            if total_quantity > 0 and flag == 0:
+                self.invoice_details_window = QtWidgets.QMainWindow()
+                self.ui = Invoice_MainWindow(comboText, customer_details, p_id, qty, price,total)
+                self.ui.setupUi(self.invoice_details_window)
 
-            # self.ui.label.setText(f"Item Details for {item_name}")
-            self.invoice_details_window.show()
+                # self.ui.label.setText(f"Item Details for {item_name}")
+                self.invoice_details_window.show()
+            elif total_quantity > 0 and flag == 1:
+                self.show_notification(f"{fault_name} Available upto {fault_stock} units !!")
+            else:
+                ## if total_quantity is zero
+                self.show_notification("Cart is Empty!!")
         else:
             ## show pop-up no item Added to cart
-            self.show_notification()
+            self.show_notification("Cart is Empty!!")
 
-    def show_notification(self):
-        dialog = PopupDialog("Cart is Empty !!", 'red_cross.jpg', self)
+    def show_notification(self, Message):
+        dialog = PopupDialog(Message, 'red_cross.jpg', self)
         dialog.exec_()
     
     def update_quantity_in_db(self):
@@ -1127,7 +1980,6 @@ class HomePage(QtWidgets.QMainWindow):
         self.ui = CartPage(self.myCustomer)
         self.ui.setupUi(self.cart_details_window)
         self.cart_details_window.show()
-
 
 
 if __name__ == "__main__":

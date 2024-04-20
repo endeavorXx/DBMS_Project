@@ -49,8 +49,12 @@ class connectDatabase:
 VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{pin_code},'{pswd}')
         """
         try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql)
             self.con.commit()
+        except Exception as E:
+            self.con.rollback()
+            return E
         finally:
             self.con.close()
 
@@ -62,22 +66,10 @@ VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{
             where customer_id = {customer_id};
         """ 
         try:
-            self.cursor.execute(sql)
-            self.con.commit()
-        finally:
-            self.con.close()
-
-    def delete_customer_info(self, customer_id):
-        self.connect_db()
-
-        sql = f"""
-            DELETE FROM customer where customer_id = {customer_id}
-        """ 
-        try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql)
             self.con.commit()
         except Exception as E:
-
             self.con.rollback()
             return E
         finally:
@@ -185,12 +177,13 @@ VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{
 
     def add_order_info(self, customer_id, payment_method, amt, transaction_id, order_date, order_time, delivery_agent_id , delivery_date, delivery_status):
         self.connect_db()
-
+        
         sql = f"""
             INSERT INTO orders (customer_id, payment_method, amount, transaction_id, order_date, order_time, delivery_agent_id, delivery_date, delivery_status)
             VALUES({customer_id},'{payment_method}','{amt}','{transaction_id}','{order_date}','{order_time}','{delivery_agent_id}','{delivery_date}','{delivery_status}');
         """ 
         try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql)
             self.con.commit()
         except Exception as E:
@@ -204,12 +197,13 @@ VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{
 
     def add_order_details_info(self, order_id, product_id, qty, cost_per_piece, total):
         self.connect_db()
-
+        
         sql = f"""
             INSERT INTO order_details (order_id, product_id, quantity, cost_per_piece, total)
             VALUES({order_id},'{product_id}','{qty}','{cost_per_piece}','{total}');
         """ 
         try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql)
             self.con.commit()
         except Exception as E:
@@ -277,32 +271,65 @@ VALUES('{first_name}','{last_name}','{phone_no}','{street}','{city}','{state}',{
             self.con.close()
     
     def get_all_product(self):
-        self.connect_db()
-
-        sql = f"""
-            SELECT * FROM PRODUCT
-        """ 
         try:
+            self.connect_db()
+            
+            self.cursor.execute("START TRANSACTION")
+            
+            sql = "SELECT * FROM product"
             self.cursor.execute(sql)
             result = self.cursor.fetchall()
+            
+            self.con.commit()
+            
             return result
-        
-        except Exception as E:
-
+            
+        except Exception as e:
             self.con.rollback()
-            return E
+            return e
+            
         finally:
             self.con.close()
+
+
     def add_product_info(self, name, category, price, rating, qty, description = None, url = None):
         self.connect_db()
 
         sql = f"""
             INSERT INTO product (name, category, price, rating, qty, description, url)
-VALUES('{name}','{category}',{price},{rating},{qty},'{description}','{url}')
+VALUES('{name}','{category}',{price},{rating},{qty},'{description}','{url}');
         """
         try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql)
             self.con.commit()
+        except Exception as E:
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+
+    def update_product_info(self, product_id, name, category, price, qty, rating, description, url):
+        self.connect_db()
+        if url == "":
+            sql = f"""
+                UPDATE product SET name = '{name}',category = '{category}', price = {price}, rating = {rating}, qty = {qty}, description = '{description}'
+                where product_id = {product_id};
+            """
+        else:
+            sql = f"""
+                UPDATE product SET name = '{name}',category = '{category}', price = {price}, rating = {rating}, qty = {qty}, description = '{description}', url = '{url}'
+                where product_id = {product_id};
+            """
+
+        try:
+            self.cursor.execute("START TRANSACTION")
+            self.cursor.execute(sql)
+            self.con.commit()
+        except Exception as E:
+
+            self.con.rollback()
+            return E
         finally:
             self.con.close()
     
@@ -314,10 +341,10 @@ VALUES('{name}','{category}',{price},{rating},{qty},'{description}','{url}')
 VALUES({customer_id},'{payment_method}',{amount},'{transaction_id}','{order_date}','{order_time}','{delivery_date}','{delivery_status}');
         """ 
         try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql)
             self.con.commit()
         except Exception as E:
-            print("Query not executed")
             self.con.rollback()
             return E
         finally:
@@ -329,12 +356,12 @@ VALUES({customer_id},'{payment_method}',{amount},'{transaction_id}','{order_date
             SELECT * from cart;
         """
         try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql)
             result = self.cursor.fetchall()
             return result
         
         except Exception as E:
-
             self.con.rollback()
             return E
         finally:
@@ -374,11 +401,11 @@ VALUES({customer_id},'{payment_method}',{amount},'{transaction_id}','{order_date
             AND product_id = {product_id};
         """
         try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql1)
             self.cursor.execute(sql2)
             self.con.commit()
         except Exception as E:
-
             self.con.rollback()
             return E
         finally:
@@ -391,6 +418,7 @@ VALUES({customer_id},'{payment_method}',{amount},'{transaction_id}','{order_date
             SELECT * FROM cart where customer_id = {customer_id};
         """ 
         try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql)
             result = self.cursor.fetchall()
             return result
@@ -411,12 +439,12 @@ VALUES({customer_id},'{payment_method}',{amount},'{transaction_id}','{order_date
 VALUES ({customer_id}, {product_id}, '{product_name}', {quantity}, {price}, {total}, '{url}');
         """ 
         try:
+            self.cursor.execute("START TRANSACTION")
             self.cursor.execute(sql)
             self.con.commit()
-        # except Exception as E:
-        #     print("Query not executed")
-        #     self.con.rollback()
-        #     return E
+        except Exception as E:
+            self.con.rollback()
+            return E
         finally:
             self.con.close()
     
@@ -458,4 +486,179 @@ VALUES ({customer_id}, {product_id}, '{product_name}', {quantity}, {price}, {tot
             self.con.close()
 
     
-    
+    def search_vendor_info(self, vendor_id = None, vendor_name = None, street = None, city = None, state = None, phone_no = None):
+        self.connect_db()
+
+        condition = ""
+
+        if vendor_id:
+            ## customer_id is an integer in our tables
+            condition += f"vendor_id = {vendor_id}"
+        else:
+            if vendor_name:
+                if condition:
+                    condition += f"and vendor_name LIKE '%{vendor_name}%'"
+                else:
+                    condition += f"vendor_name LIKE '%{vendor_name}%'"
+            if street:
+                if condition:
+                    condition += f"and street LIKE '%{street}%'"
+                else:
+                    condition += f"street LIKE '%{street}%'"
+            if city:
+                if condition:
+                    condition += f"and city LIKE '%{city}%'"
+                else:
+                    condition += f"city LIKE '%{city}%'"
+            if  state:
+                if condition:
+                    condition += f"and state LIKE '%{state}%'"
+                else:
+                    condition += f"state LIKE '%{state}%'"
+            if phone_no:
+                if condition:
+                    condition += f"and phone_no = '{phone_no}'"
+                else:
+                    condition += f"phone_no = '{phone_no}'"
+
+            
+        if condition:
+            sql = f"""
+                select * from vendor where {condition};
+            """ 
+        else:
+            sql = f"""
+                select * from vendor;
+            """ 
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        finally:
+            self.con.close()
+
+    def add_vendor_info(self, vendor_name, street, city, state, phone_no):
+        self.connect_db()
+
+        sql = f"""
+            INSERT INTO vendor (vendor_name, street, city, state, phone_no)
+VALUES('{vendor_name}', '{street}', '{city}','{state}','{phone_no}')
+        """
+        try:
+            self.cursor.execute("START TRANSACTION")
+            self.cursor.execute(sql)
+            self.con.commit()
+        except Exception as E:
+
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+
+    def update_vendor_info(self, vendor_id, vendor_name, street, city, state, phone_no):
+        self.connect_db()
+
+        sql = f"""
+            UPDATE vendor SET vendor_name = '{vendor_name}', phone_no = '{phone_no}', street = '{street}', city = '{city}', state = '{state}'
+            where vendor_id = {vendor_id};
+        """ 
+        try:
+            self.cursor.execute("START TRANSACTION")
+            self.cursor.execute(sql)
+            self.con.commit()
+        except Exception as E:
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+
+
+
+    def add_supply_info(self, vendor_id, product_id, qty_supplied, date, time, cost_per_piece, total_cost, margin_percentage):
+        self.connect_db()
+        self.cursor.execute("SELECT CURDATE()")
+
+        # Fetch the result of the query
+        # print(self.cursor.fetchall()[0])
+        current_date = self.cursor.fetchall()[0]['CURDATE()']
+        # print("Current Date:", current_date)
+
+        # Execute a SQL query with CURTIME() to get the current time
+        
+        self.cursor.execute("SELECT CURTIME()")
+
+        # Fetch the result of the query
+        current_time = self.cursor.fetchall()[0]['CURTIME()']
+        # print(current_time)
+        
+        sql = f"""
+    INSERT INTO supplies (vendor_id, product_id, qty_supplied, date, time, cost_per_piece, total_cost, margin_percentage)
+    VALUES ({vendor_id}, {product_id}, {qty_supplied}, '{current_date}', '{current_time}', {cost_per_piece}, {total_cost}, {margin_percentage})
+"""
+
+        try:
+            self.cursor.execute("START TRANSACTION")
+            self.cursor.execute(sql)
+            self.con.commit()
+        except Exception as E:
+            self.con.rollback()
+            return E
+        finally:
+            self.con.close()
+
+    def delete_supply_info(self, supply_id):
+        self.connect_db()
+
+        sql = f"""
+            DELETE FROM SUPPLIES WHERE SUPPLY_ID = {supply_id}
+        """
+        try:
+            self.cursor.execute(sql)
+            self.con.commit()
+        finally:
+            self.con.close()
+
+    def search_supply_info(self, supply_id, vendor_id, product_id, date):
+        self.connect_db()
+
+        condition = ""
+
+        if supply_id:
+            ## customer_id is an integer in our tables
+            condition += f"supply_id = {supply_id}"
+        else:
+            
+            if vendor_id:
+                if condition:
+                    condition += f"and vendor_id = {vendor_id}"
+                else:
+                    condition += f"vendor_id = {vendor_id}"
+            if product_id:
+                if condition:
+                    condition += f"and product_id = {product_id}"
+                else:
+                    condition += f"product_id = {product_id}"
+            if date:
+                if condition:
+                    condition += f"and date = {date}"
+                else:
+                    condition += f"date = {date}"
+
+            
+        if condition:
+            sql = f"""
+                select * from supplies where {condition};
+            """ 
+        else:
+            sql = f"""
+                select * from supplies;
+            """ 
+        try:
+            self.cursor.execute(sql)
+            result = self.cursor.fetchall()
+            return result
+        
+        finally:
+            self.con.close()
+        
