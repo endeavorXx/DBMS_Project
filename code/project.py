@@ -1950,7 +1950,6 @@ class HomePage(QtWidgets.QMainWindow):
             (name, price, url) = self.db.search_product_info(product_id)[0]
             print(name)
             print(price)
-            print(url)
             self.db.add_product_to_cart(customer_id, product_id, name, price, price, 1, url)  # Quantity is set to 1 by default tehrefore initially total is same as price of the 1 product
         
         self.show_notification()

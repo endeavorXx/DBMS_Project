@@ -433,7 +433,14 @@ VALUES({customer_id},'{payment_method}',{amount},'{transaction_id}','{order_date
     
     def add_product_to_cart(self, customer_id, product_id, product_name, price, total, quantity, url):
         self.connect_db()
-
+        length = len(url)
+        url_new = ""
+        for i in range(length):
+            ch = url[i]
+            url_new += ch
+            if ch == "\\":
+                url_new += "\\"
+        url = url_new
         sql = f"""
             INSERT INTO cart (customer_id, product_id, product_name, quantity, price, total, url)
 VALUES ({customer_id}, {product_id}, '{product_name}', {quantity}, {price}, {total}, '{url}');
